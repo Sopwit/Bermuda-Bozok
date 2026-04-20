@@ -1,0 +1,12 @@
+cachetools
+fastapi
+httpx
+joblib
+pandas
+pydantic
+python-dotenv
+pytest
+requests
+scikit-learn
+uvicorn
+xgboost

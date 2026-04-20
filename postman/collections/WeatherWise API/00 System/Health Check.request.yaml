@@ -1,0 +1,22 @@
+$kind: http-request
+description: Verifies API availability, dependency readiness, and model artifact loading before demoing product flows.
+url: "{{baseUrl}}/health"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Health payload is valid", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.status).to.eql("ok");
+          pm.expect(jsonData.service).to.eql("weatherwise-api");
+          pm.expect(jsonData.version).to.be.a("string");
+          pm.expect(jsonData.model_assets_loaded).to.be.a("boolean");
+          pm.expect(jsonData.dependencies).to.have.property("openweather");
+          pm.expect(jsonData.dependencies).to.have.property("gemini");
+      });
+    language: text/javascript
+order: 100

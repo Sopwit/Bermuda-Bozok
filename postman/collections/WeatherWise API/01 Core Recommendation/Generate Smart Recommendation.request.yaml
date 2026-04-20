@@ -1,0 +1,35 @@
+$kind: http-request
+description: Converts live weather into a product-ready recommendation with headline, advice, reason, ML signals, and activity suitability.
+url: "{{baseUrl}}/weather/recommendation"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "city": "{{city}}",
+      "activity": "walking",
+      "language": "en"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Recommendation payload is product-ready", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.status).to.eql("success");
+          pm.expect(jsonData.headline).to.be.a("string");
+          pm.expect(jsonData.advice).to.be.a("string");
+          pm.expect(jsonData.reason).to.be.a("string");
+          pm.expect(jsonData.confidence).to.be.oneOf(["low", "medium", "high"]);
+          pm.expect(jsonData.activity_advice).to.have.property("activity");
+          pm.expect(jsonData.activity_advice).to.have.property("recommendation");
+          pm.expect(jsonData.activity_advice).to.have.property("reason");
+          pm.expect(jsonData.ml_decision.umbrella_needed).to.be.a("boolean");
+      });
+    language: text/javascript
+order: 200

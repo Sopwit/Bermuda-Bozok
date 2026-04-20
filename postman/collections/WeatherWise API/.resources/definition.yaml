@@ -1,0 +1,5 @@
+$kind: collection
+description: WeatherWise API collection for checkpoint and jury review. It demonstrates system health, smart recommendation generation, activity suitability, planning support, and graceful validation errors.
+variables:
+  baseUrl: http://127.0.0.1:8000
+  city: Ankara

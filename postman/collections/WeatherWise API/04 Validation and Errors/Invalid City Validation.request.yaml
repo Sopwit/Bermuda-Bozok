@@ -1,0 +1,29 @@
+$kind: http-request
+description: Validates graceful handling for an invalid city input and confirms standardized error formatting.
+url: "{{baseUrl}}/weather/recommendation"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "city": "InvalidCityName123",
+      "activity": "walking",
+      "language": "en"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 404 for invalid city", function () {
+          pm.response.to.have.status(404);
+      });
+
+      pm.test("Error payload is standardized", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.status).to.eql("error");
+          pm.expect(jsonData.error_code).to.eql("CITY_NOT_FOUND");
+          pm.expect(jsonData.detail).to.be.a("string");
+      });
+    language: text/javascript
+order: 500

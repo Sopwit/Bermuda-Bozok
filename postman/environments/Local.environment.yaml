@@ -1,0 +1,8 @@
+name: Local
+values:
+  - key: baseUrl
+    value: 'http://127.0.0.1:8000'
+    enabled: true
+  - key: city
+    value: Ankara
+    enabled: true

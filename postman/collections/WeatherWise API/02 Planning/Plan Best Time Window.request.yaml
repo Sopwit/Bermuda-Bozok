@@ -1,0 +1,30 @@
+$kind: http-request
+description: Shows the best upcoming time window for an outdoor activity using short-term forecast data.
+url: "{{baseUrl}}/planning/day"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "city": "{{city}}",
+      "activity": "walking"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Planning payload is valid", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.status).to.eql("success");
+          pm.expect(jsonData.best_time_window).to.be.a("string");
+          pm.expect(jsonData.summary).to.be.a("string");
+          pm.expect(jsonData.reason).to.be.a("string");
+          pm.expect(jsonData.confidence).to.be.oneOf(["low", "medium", "high"]);
+      });
+    language: text/javascript
+order: 300

@@ -1,0 +1,17 @@
+{
+  "generated_at_utc": "2026-04-19T11:06:48.650547+00:00",
+  "python_version": "3.12.13",
+  "package_versions": {
+    "joblib": "1.5.0",
+    "numpy": "2.4.4",
+    "pandas": "2.2.3",
+    "scikit-learn": "1.6.1",
+    "xgboost": "3.0.0"
+  },
+  "artifacts": [
+    "model_umbrella.joblib",
+    "model_clothing.joblib",
+    "label_encoder_clothing.joblib",
+    "model_features.joblib"
+  ]
+}

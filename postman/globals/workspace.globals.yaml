@@ -1,0 +1,10 @@
+name: Globals
+values:
+  - key: baseUrl
+    value: http://127.0.0.1:8000
+    type: text
+    enabled: true
+  - key: city
+    value: Ankara
+    type: text
+    enabled: true
