@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #F6EEDE;
+  --color-paper-2: #EFE4CE;
+  --color-ink: #2A1810;
+  --color-ink-soft: #5A4635;
+  --color-ink-muted: #8A7760;
+  --color-line: #D9C9A8;
+  --color-line-soft: #E8DCC1;
+  --color-accent: #B33A2E;
+  --color-accent-soft: #E85D44;
+  --color-sun: #E8A43A;
+  --color-sky: #5B8FB9;
+  --color-cloud: #9AA4B2;
+  --color-rain: #4A7FA3;
+  --color-card: #FBF5E6;
+
+  --font-display: "Fraunces", "Instrument Serif", ui-serif, Georgia, serif;
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-hand: "Caveat", cursive;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background:
+    radial-gradient(1200px 800px at 10% -10%, #FBEFD3 0%, transparent 55%),
+    radial-gradient(1000px 700px at 110% 10%, #F3DFC0 0%, transparent 50%),
+    radial-gradient(900px 600px at 50% 120%, #EFE0BD 0%, transparent 55%),
+    #F6EEDE;
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle paper grain */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+  background-image:
+    radial-gradient(rgba(120, 80, 40, 0.06) 1px, transparent 1px);
+  background-size: 3px 3px;
+  z-index: 0;
+}
+
+.card {
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: 22px;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.8) inset,
+    0 1px 2px rgba(80, 50, 20, 0.04),
+    0 18px 40px -24px rgba(80, 50, 20, 0.18);
+}
+
+.dashed-box {
+  border: 1.5px dashed var(--color-line);
+  border-radius: 18px;
+  background: rgba(255, 251, 240, 0.6);
+}
+
+.pill {
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.8rem;
+  background: var(--color-card);
+  color: var(--color-ink-soft);
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+.pill:hover { border-color: var(--color-accent); color: var(--color-accent); }
+.pill.active {
+  background: var(--color-ink);
+  color: var(--color-paper);
+  border-color: var(--color-ink);
+}
+
+.divider-ink {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--color-line) 12%, var(--color-line) 88%, transparent);
+}
+
+/* sketch-underline effect */
+.ink-underline {
+  background-image: linear-gradient(to right, var(--color-accent) 0, var(--color-accent) 100%);
+  background-repeat: no-repeat;
+  background-size: 100% 2px;
+  background-position: 0 100%;
+  padding-bottom: 3px;
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-6px) rotate(2deg); }
+}
+.float-slow { animation: float-slow 6s ease-in-out infinite; }
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); transform-origin: center; }
+  to { transform: rotate(360deg); transform-origin: center; }
+}
+.spin-slow { animation: spin-slow 18s linear infinite; transform-origin: center; }
+
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.scroll-x { scrollbar-width: thin; scrollbar-color: var(--color-line) transparent; }
+.scroll-x::-webkit-scrollbar { height: 6px; }
+.scroll-x::-webkit-scrollbar-thumb { background: var(--color-line); border-radius: 999px; }
