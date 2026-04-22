@@ -128,3 +128,28 @@ Run:
 ```bash
 .venv312/bin/python -m pytest
 ```
+
+## Run on error
+
+Backend
+
+python -m venv venv
+
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+venv\Scripts\activate
+
+pip install -r requirements.txt
+
+uvicorn main:app --reload --port 8000
+
+
+Frontend
+
+cd frontend
+
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+npm install
+
+npm run dev

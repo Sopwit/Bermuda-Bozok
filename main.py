@@ -6,8 +6,9 @@ from __future__ import annotations
 import logging
 
 from cachetools import TTLCache
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from config import get_settings
@@ -15,22 +16,25 @@ from schemas import (
     ActivitiesResponse,
     ActivityRecommendationItem,
     AdviceResponse,
+    CitySuggestionItem,
+    CitySuggestionsResponse,
+    DashboardResponse,
     ErrorResponse,
     HealthDependencies,
     HealthResponse,
-    MLDecision,
     PlanningInput,
     PlanningResponse,
     RecommendationInput,
-    CitySuggestionItem,
-    CitySuggestionsResponse,
 )
 from services import (
     activity_recommendation,
     assess_confidence,
+    build_activity_windows,
     build_headline,
+    build_outfit_plan,
     build_reason,
     dependencies_status,
+    fetch_daily_forecast,
     fetch_forecast_data,
     fetch_weather_data,
     find_best_time_window,
@@ -40,7 +44,6 @@ from services import (
     search_city_suggestions,
 )
 
-
 logging.basicConfig(level=logging.INFO)
 settings = get_settings()
 app = FastAPI(
@@ -48,6 +51,18 @@ app = FastAPI(
     description="WeatherWise transforms live weather into short, human-friendly recommendations and planning signals.",
     version="1.1.0",
 )
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 api_cache = TTLCache(maxsize=1000, ttl=settings.cache_ttl_seconds)
 
 
@@ -97,13 +112,15 @@ async def health_check() -> HealthResponse:
         model_assets_loaded=model_assets_available(),
         dependencies=HealthDependencies(**deps),
     )
+
+
 @app.get(
     "/cities/search",
     response_model=CitySuggestionsResponse,
     responses={422: {"model": ErrorResponse}, 500: {"model": ErrorResponse}, 502: {"model": ErrorResponse}},
     tags=["cities"],
 )
-async def cities_search(q: str) -> CitySuggestionsResponse:
+async def cities_search(q: str = Query(..., min_length=2)) -> CitySuggestionsResponse:
     try:
         cleaned = q.strip()
         results = search_city_suggestions(cleaned)
@@ -119,6 +136,71 @@ async def cities_search(q: str) -> CitySuggestionsResponse:
         logging.exception("Unhandled error in /cities/search")
         raise HTTPException(status_code=500, detail="Internal server error.") from exc
 
+def _build_dashboard(data: RecommendationInput) -> DashboardResponse:
+    cache_key = f"dashboard:{data.city.strip().lower()}:{data.activity}:{data.language}"
+
+    print("CACHE KEY:", cache_key)
+    print("CACHE HIT:", cache_key in api_cache)
+
+# if cache_key in api_cache:
+#     return DashboardResponse(**api_cache[cache_key])
+
+    live_weather = fetch_weather_data(data.city)
+    hourly_forecast = fetch_forecast_data(data.city)
+    daily_forecast = fetch_daily_forecast(data.city)
+
+    umbrella_needed, umbrella_text, clothing_text = predict_ml_decisions(live_weather)
+    activity_result = activity_recommendation(data.activity or "walking", live_weather)
+    reason = build_reason(live_weather)
+
+    ai_advice = generate_llm_advice(
+        city=data.city,
+        weather_condition=live_weather["weather_condition"],
+        temp=live_weather["temperature_c"],
+        umbrella_text=umbrella_text,
+        clothing_text=clothing_text,
+        reason=reason,
+        activity_result=activity_result,
+        language=data.language,
+    )
+
+    outfit_plan = build_outfit_plan(clothing_text, umbrella_needed, live_weather)
+
+    activities = [
+        {
+            "name": item["activity"],
+            "recommendation": item["recommendation"],
+            "reason": item["reason"],
+        }
+        for item in [activity_recommendation(name, live_weather) for name in ("walking", "cycling", "outdoor_dining")]
+    ]
+
+    activity_windows = build_activity_windows(hourly_forecast)
+
+    payload = {
+        "status": "success",
+        "location": data.city,
+        "headline": build_headline(live_weather, clothing_text, umbrella_needed, data.language),
+        "advice": ai_advice,
+        "reason": reason,
+        "confidence": assess_confidence(live_weather),
+        "live_data": live_weather,
+        "ml_decision": {
+            "umbrella_needed": umbrella_needed,
+            "clothing_category": clothing_text,
+        },
+        "outfit_plan": outfit_plan,
+        "activity_advice": activity_result,
+        "alert": None,
+        "ai_advice": ai_advice,
+        "activities": activities,
+        "activity_windows": activity_windows,
+        "hourly_forecast": hourly_forecast,
+        "daily_forecast": daily_forecast,
+    }
+
+# api_cache[cache_key] = payload
+    return DashboardResponse(**payload)
 
 def _build_recommendation(data: RecommendationInput) -> AdviceResponse:
     cache_key = f"recommendation:{data.city.strip().lower()}:{data.activity}:{data.language}"
@@ -158,6 +240,21 @@ def _build_recommendation(data: RecommendationInput) -> AdviceResponse:
     api_cache[cache_key] = payload
     return AdviceResponse(**payload)
 
+
+@app.post(
+    "/weather/dashboard",
+    response_model=DashboardResponse,
+    responses={404: {"model": ErrorResponse}, 422: {"model": ErrorResponse}, 500: {"model": ErrorResponse}, 502: {"model": ErrorResponse}},
+    tags=["dashboard"],
+)
+async def weather_dashboard(data: RecommendationInput) -> DashboardResponse:
+    try:
+        return _build_dashboard(data)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logging.exception("Unhandled error in /weather/dashboard")
+        raise HTTPException(status_code=500, detail="Internal server error.") from exc
 
 @app.post(
     "/weather/recommendation",

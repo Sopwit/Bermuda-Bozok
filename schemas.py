@@ -10,20 +10,6 @@ from pydantic import BaseModel, Field, field_validator
 
 SUPPORTED_ACTIVITIES = ("walking", "cycling", "outdoor_dining")
 
-class CitySuggestionItem(BaseModel):
-    name: str
-    country: str | None = None
-    admin1: str | None = None
-    latitude: float
-    longitude: float
-    display_name: str
-
-
-class CitySuggestionsResponse(BaseModel):
-    status: str
-    query: str
-    results: list[CitySuggestionItem]
-
 
 class CityInput(BaseModel):
     city: str = Field(..., min_length=2, max_length=100, description="City name to query.")
@@ -55,12 +41,38 @@ class PlanningInput(CityInput):
     )
 
 
+class CitySuggestionItem(BaseModel):
+    name: str
+    country: str | None = None
+    admin1: str | None = None
+    admin2: str | None = None
+    latitude: float
+    longitude: float
+    display_name: str
+
+
+class CitySuggestionsResponse(BaseModel):
+    status: str
+    query: str
+    results: list[CitySuggestionItem]
+
+
 class LiveWeatherData(BaseModel):
     temperature_c: float
     feels_like_c: float
     precipitation_mm: float
     wind_speed_kmh: float
+    wind_gust_kmh: float | None = None
     humidity_pct: int
+    wind_direction_deg: float | None = None
+    cloud_cover_pct: int | None = None
+    visibility_km: float | None = None
+    uv_index: float | None = None
+    european_aqi: int | None = None
+    pm2_5_ugm3: float | None = None
+    pm10_ugm3: float | None = None
+    sunrise_local: str | None = None
+    sunset_local: str | None = None
     weather_condition: str
     season: str
 
@@ -111,6 +123,67 @@ class ActivitiesResponse(BaseModel):
     headline: str
     activities: list[ActivityRecommendationItem]
     live_data: LiveWeatherData
+
+
+class OutfitPlan(BaseModel):
+    summary: str
+    layers: list[str]
+    accessories: list[str]
+    footwear: str
+
+
+class WeatherAlert(BaseModel):
+    severity: Literal["info", "warning", "critical"]
+    title: str
+    message: str
+
+
+class ActivityWindow(BaseModel):
+    activity: Literal["walking", "cycling", "outdoor_dining"]
+    best_time_window: str
+    summary: str
+    reason: str
+    confidence: Literal["low", "medium", "high"]
+    score: int
+    recommendation: Literal["recommended", "acceptable", "not_recommended"]
+
+
+class ForecastEntry(LiveWeatherData):
+    time_label: str
+
+
+class DailyForecastItem(BaseModel):
+    date: str
+    label: str
+    weather_condition: str
+    temperature_high_c: float
+    temperature_low_c: float
+    precipitation_total_mm: float
+    precipitation_probability_max_pct: int | None = None
+    uv_index_max: float | None = None
+    sunshine_duration_hours: float | None = None
+    wind_gust_max_kmh: float | None = None
+    sunrise_local: str | None = None
+    sunset_local: str | None = None
+
+
+class DashboardResponse(BaseModel):
+    status: str
+    location: str
+    headline: str
+    advice: str
+    reason: str
+    confidence: Literal["low", "medium", "high"]
+    live_data: LiveWeatherData
+    ml_decision: MLDecision
+    outfit_plan: OutfitPlan
+    activity_advice: ActivityAdvice
+    alert: WeatherAlert | None = None
+    ai_advice: str
+    activities: list[ActivityRecommendationItem]
+    activity_windows: list[ActivityWindow]
+    hourly_forecast: list[ForecastEntry]
+    daily_forecast: list[DailyForecastItem]
 
 
 class HealthDependencies(BaseModel):
