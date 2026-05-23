@@ -15,31 +15,93 @@ import pandas as pd
 import requests
 from fastapi import HTTPException
 
-from config import get_settings
+from weatherwise.config import get_settings
 
 
 logger = logging.getLogger(__name__)
-BASE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+MODELS_DIR = PROJECT_ROOT / "models"
 
 
 @lru_cache(maxsize=1)
 def load_model_assets() -> dict:
     return {
-        "model_umbrella": joblib.load(BASE_DIR / "model_umbrella.joblib"),
-        "model_clothing": joblib.load(BASE_DIR / "model_clothing.joblib"),
-        "label_encoder_clothing": joblib.load(BASE_DIR / "label_encoder_clothing.joblib"),
-        "model_features": joblib.load(BASE_DIR / "model_features.joblib"),
+        "model_umbrella": joblib.load(MODELS_DIR / "model_umbrella.joblib"),
+        "model_clothing": joblib.load(MODELS_DIR / "model_clothing.joblib"),
+        "label_encoder_clothing": joblib.load(MODELS_DIR / "label_encoder_clothing.joblib"),
+        "model_features": joblib.load(MODELS_DIR / "model_features.joblib"),
     }
 
 
 def model_assets_available() -> bool:
     required_files = [
-        BASE_DIR / "model_umbrella.joblib",
-        BASE_DIR / "model_clothing.joblib",
-        BASE_DIR / "label_encoder_clothing.joblib",
-        BASE_DIR / "model_features.joblib",
+        MODELS_DIR / "model_umbrella.joblib",
+        MODELS_DIR / "model_clothing.joblib",
+        MODELS_DIR / "label_encoder_clothing.joblib",
+        MODELS_DIR / "model_features.joblib",
     ]
     return all(path.exists() for path in required_files)
+
+
+def _format_coordinate_location(latitude: float | None, longitude: float | None) -> str:
+    if latitude is None or longitude is None:
+        return "Unknown location"
+    return f"{latitude:.4f}, {longitude:.4f}"
+
+
+def _fetch_weather_payload(lat: float, lon: float) -> dict:
+    weather_url = "https://api.open-meteo.com/v1/forecast"
+    return _get_json(
+        weather_url,
+        params={
+            "latitude": lat,
+            "longitude": lon,
+            "current": (
+                "temperature_2m,relative_humidity_2m,apparent_temperature,"
+                "precipitation,weather_code,wind_speed_10m,wind_gusts_10m,"
+                "wind_direction_10m,cloud_cover,visibility,uv_index"
+            ),
+            "daily": "sunrise,sunset",
+            "timezone": "auto",
+            "forecast_days": 1,
+        },
+    )
+
+
+def _fetch_hourly_payload(lat: float, lon: float) -> dict:
+    weather_url = "https://api.open-meteo.com/v1/forecast"
+    return _get_json(
+        weather_url,
+        params={
+            "latitude": lat,
+            "longitude": lon,
+            "hourly": (
+                "temperature_2m,relative_humidity_2m,apparent_temperature,"
+                "precipitation,weather_code,wind_speed_10m,wind_gusts_10m,"
+                "wind_direction_10m,cloud_cover,visibility,uv_index"
+            ),
+            "timezone": "auto",
+            "forecast_days": 2,
+        },
+    )
+
+
+def _fetch_daily_payload(lat: float, lon: float) -> dict:
+    weather_url = "https://api.open-meteo.com/v1/forecast"
+    return _get_json(
+        weather_url,
+        params={
+            "latitude": lat,
+            "longitude": lon,
+            "daily": (
+                "weather_code,temperature_2m_max,temperature_2m_min,"
+                "precipitation_sum,precipitation_probability_max,uv_index_max,"
+                "sunshine_duration,wind_gusts_10m_max,sunrise,sunset"
+            ),
+            "timezone": "auto",
+            "forecast_days": 7,
+        },
+    )
 
 
 def dependencies_status() -> dict:
@@ -207,27 +269,16 @@ def fetch_air_quality_data(lat: float, lon: float) -> dict:
         "pm10_ugm3": float(current["pm10"]) if current.get("pm10") is not None else None,
     }
 
-def fetch_weather_data(city: str) -> dict:
-    geo = geocode_city(city)
-    lat = geo["latitude"]
-    lon = geo["longitude"]
-
-    weather_url = "https://api.open-meteo.com/v1/forecast"
-    w_data = _get_json(
-        weather_url,
-        params={
-            "latitude": lat,
-            "longitude": lon,
-            "current": (
-                "temperature_2m,relative_humidity_2m,apparent_temperature,"
-                "precipitation,weather_code,wind_speed_10m,wind_gusts_10m,"
-                "wind_direction_10m,cloud_cover,visibility,uv_index"
-            ),
-            "daily": "sunrise,sunset",
-            "timezone": "auto",
-            "forecast_days": 1,
-        },
-    )
+def fetch_weather_data(city: str | None = None, *, latitude: float | None = None, longitude: float | None = None) -> dict:
+    if latitude is not None and longitude is not None:
+        lat, lon = latitude, longitude
+        w_data = _fetch_weather_payload(latitude, longitude)
+    elif city:
+        geo = geocode_city(city)
+        lat, lon = geo["latitude"], geo["longitude"]
+        w_data = _fetch_weather_payload(lat, lon)
+    else:
+        raise HTTPException(status_code=400, detail="Either city or coordinates must be provided.")
 
     current = w_data["current"]
     daily = w_data.get("daily", {})
@@ -262,26 +313,21 @@ def fetch_weather_data(city: str) -> dict:
         "season": get_season(),
     }
 
-def fetch_forecast_data(city: str) -> list[dict]:
-    geo = geocode_city(city)
-    lat = geo["latitude"]
-    lon = geo["longitude"]
-
-    weather_url = "https://api.open-meteo.com/v1/forecast"
-    f_data = _get_json(
-        weather_url,
-        params={
-            "latitude": lat,
-            "longitude": lon,
-            "hourly": (
-                "temperature_2m,relative_humidity_2m,apparent_temperature,"
-                "precipitation,weather_code,wind_speed_10m,wind_gusts_10m,"
-                "wind_direction_10m,cloud_cover,visibility,uv_index"
-            ),
-            "timezone": "auto",
-            "forecast_days": 2,
-        },
-    )
+def fetch_forecast_data(
+    city: str | None = None,
+    *,
+    latitude: float | None = None,
+    longitude: float | None = None,
+) -> list[dict]:
+    if latitude is not None and longitude is not None:
+        lat, lon = latitude, longitude
+        f_data = _fetch_hourly_payload(lat, lon)
+    elif city:
+        geo = geocode_city(city)
+        lat, lon = geo["latitude"], geo["longitude"]
+        f_data = _fetch_hourly_payload(lat, lon)
+    else:
+        raise HTTPException(status_code=400, detail="Either city or coordinates must be provided.")
 
     hourly = f_data["hourly"]
     entries: list[dict] = []
@@ -320,26 +366,21 @@ def fetch_forecast_data(city: str) -> list[dict]:
     return entries[:24]
 
 
-def fetch_daily_forecast(city: str) -> list[dict]:
-    geo = geocode_city(city)
-    lat = geo["latitude"]
-    lon = geo["longitude"]
-
-    weather_url = "https://api.open-meteo.com/v1/forecast"
-    d_data = _get_json(
-        weather_url,
-        params={
-            "latitude": lat,
-            "longitude": lon,
-            "daily": (
-                "weather_code,temperature_2m_max,temperature_2m_min,"
-                "precipitation_sum,precipitation_probability_max,uv_index_max,"
-                "sunshine_duration,wind_gusts_10m_max,sunrise,sunset"
-            ),
-            "timezone": "auto",
-            "forecast_days": 7,
-        },
-    )
+def fetch_daily_forecast(
+    city: str | None = None,
+    *,
+    latitude: float | None = None,
+    longitude: float | None = None,
+) -> list[dict]:
+    if latitude is not None and longitude is not None:
+        lat, lon = latitude, longitude
+        d_data = _fetch_daily_payload(lat, lon)
+    elif city:
+        geo = geocode_city(city)
+        lat, lon = geo["latitude"], geo["longitude"]
+        d_data = _fetch_daily_payload(lat, lon)
+    else:
+        raise HTTPException(status_code=400, detail="Either city or coordinates must be provided.")
 
     daily = d_data["daily"]
     items: list[dict] = []
@@ -573,33 +614,6 @@ def build_outfit_plan(clothing_text: str, umbrella_needed: bool, weather_dict: d
         "footwear": footwear,
     }
 
-
-def build_activity_windows(forecast_entries: list[dict]) -> list[dict]:
-    windows: list[dict] = []
-
-    for activity in ("walking", "cycling", "outdoor_dining"):
-        best = find_best_time_window(activity, forecast_entries)
-
-        if best["recommendation"] == "not_recommended":
-            summary = f"{activity.replace('_', ' ').capitalize()} is generally weak today; this is only the least risky window."
-        elif best["recommendation"] == "acceptable":
-            summary = f"{activity.replace('_', ' ').capitalize()} is possible in this window, but conditions are mixed."
-        else:
-            summary = f"Best time for {activity.replace('_', ' ')} is around {best['best_time_window']}."
-
-        windows.append(
-            {
-                "activity": activity,
-                "best_time_window": best["best_time_window"],
-                "summary": summary,
-                "reason": best["reason"],
-                "confidence": best["confidence"],
-                "score": best["score"],
-                "recommendation": best["recommendation"],
-            }
-        )
-
-    return windows
 
 def _normalize_text(text: str) -> str:
     text = text.strip()
@@ -903,10 +917,8 @@ def _score_activity_entry(activity: str, entry: dict) -> float:
 
     score = 80.0
 
-    # yağış en önemli faktör ama artık aşırı sert değil
     score -= min(rain * 45, 38)
 
-    # rüzgar cezası
     score -= max(wind - 8, 0) * 1.6
 
     if activity == "walking":

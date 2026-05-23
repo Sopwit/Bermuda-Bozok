@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   Sparkles,
   Footprints,
@@ -30,32 +30,32 @@ type ActivityPanelProps = {
 
 export function ActivityPanel({ activitiesData, activityWindows }: ActivityPanelProps) {
   const [active, setActive] = useState<ActivityKey>('walking');
-  const activity = activities.find((item) => item.key === active)!;
+  const activity = activities.find((item) => item.key === active) ?? activities[0];
   const activitySummary = activitiesData.find((item) => item.name === active);
   const bestWindow = activityWindows.find((item) => item.activity === active);
 
- const suitabilityScore = bestWindow?.score ?? 0;
+  const suitabilityScore = bestWindow?.score ?? 0;
 
   if (!activitySummary || !bestWindow) return null;
 
-const scoreText = buildScoreText(
-  bestWindow.recommendation,
-  suitabilityScore,
-  active,
-);
+  const scoreText = buildScoreText(
+    bestWindow.recommendation,
+    suitabilityScore,
+    active,
+  );
 
-const windowLabel = buildWindowLabel(
-  bestWindow.recommendation,
-  suitabilityScore,
-);
+  const windowLabel = buildWindowLabel(
+    bestWindow.recommendation,
+    suitabilityScore,
+  );
 
   const noteText = buildActivityNote({
-  activity: active,
-  recommendation: bestWindow.recommendation,
-  bestTimeWindow: bestWindow.best_time_window,
-  reason: bestWindow.reason,
-  score: suitabilityScore,
-});
+    activity: active,
+    recommendation: bestWindow.recommendation,
+    bestTimeWindow: bestWindow.best_time_window,
+    reason: bestWindow.reason,
+    score: suitabilityScore,
+  });
 
   return (
     <section className="card p-4 sm:p-5 md:p-6">

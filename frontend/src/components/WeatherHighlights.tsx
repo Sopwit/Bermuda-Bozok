@@ -268,7 +268,7 @@ function toCompassDirection(value?: number | null): string {
   if (value == null) return 'Unknown';
 
   const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-  const index = Math.round(value / 45) % 8;
+  const index = ((Math.round(value / 45) % 8) + 8) % 8;
   return directions[index];
 }
 

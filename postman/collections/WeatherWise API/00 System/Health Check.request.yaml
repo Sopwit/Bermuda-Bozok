@@ -15,8 +15,8 @@ scripts:
           pm.expect(jsonData.service).to.eql("weatherwise-api");
           pm.expect(jsonData.version).to.be.a("string");
           pm.expect(jsonData.model_assets_loaded).to.be.a("boolean");
-          pm.expect(jsonData.dependencies).to.have.property("openweather");
-          pm.expect(jsonData.dependencies).to.have.property("gemini");
+          pm.expect(jsonData.dependencies).to.have.property("open_meteo");
+          pm.expect(jsonData.dependencies).to.have.property("huggingface");
       });
     language: text/javascript
 order: 100

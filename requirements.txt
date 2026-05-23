@@ -1,12 +1,14 @@
-cachetools
-fastapi
-httpx
-joblib
-pandas
-pydantic
-python-dotenv
-pytest
-requests
-scikit-learn
-uvicorn
-xgboost
+cachetools~=5.5
+fastapi~=0.115
+joblib~=1.4
+pandas~=2.2
+pydantic~=2.10
+python-dotenv~=1.1
+requests~=2.32
+scikit-learn~=1.6
+uvicorn~=0.34
+xgboost~=2.1
+
+# Dev / test dependencies (install with: pip install -e ".[dev]")
+pytest~=8.3
+httpx~=0.28

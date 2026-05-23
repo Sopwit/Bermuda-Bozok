@@ -9,13 +9,12 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-BASE_DIR = Path(__file__).resolve().parent
-load_dotenv(BASE_DIR / ".env")
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+load_dotenv(PROJECT_ROOT / ".env")
 
 @dataclass(frozen=True)
 class Settings:
     hf_api_key: str | None
-    openweather_api_key: str | None
     cache_ttl_seconds: int
     request_timeout_seconds: int
 
@@ -32,7 +31,6 @@ def _read_int(name: str, default: int) -> int:
 def get_settings() -> Settings:
     return Settings(
         hf_api_key=os.getenv("HF_API_KEY"),
-        openweather_api_key=os.getenv("OWM_API_KEY"),
         cache_ttl_seconds=_read_int("WEATHERWISE_CACHE_TTL_SECONDS", 600),
         request_timeout_seconds=_read_int("WEATHERWISE_REQUEST_TIMEOUT_SECONDS", 5),
     )

@@ -131,7 +131,7 @@ Run:
 
 ## Run on error
 
-Backend
+### Backend
 
 python -m venv venv
 
@@ -144,7 +144,7 @@ pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 
 
-Frontend
+### Frontend
 
 cd frontend
 

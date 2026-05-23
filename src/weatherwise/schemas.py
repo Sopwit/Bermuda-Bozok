@@ -5,22 +5,45 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 SUPPORTED_ACTIVITIES = ("walking", "cycling", "outdoor_dining")
 
 
 class CityInput(BaseModel):
-    city: str = Field(..., min_length=2, max_length=100, description="City name to query.")
+    city: str | None = Field(default=None, max_length=100, description="City name to query.")
+    latitude: float | None = Field(default=None, description="Latitude for coordinate-based lookup.")
+    longitude: float | None = Field(default=None, description="Longitude for coordinate-based lookup.")
 
     @field_validator("city")
     @classmethod
-    def validate_city(cls, value: str) -> str:
+    def validate_city(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
         cleaned = value.strip()
         if len(cleaned) < 2:
             raise ValueError("City name must contain at least 2 characters.")
         return cleaned
+
+    @model_validator(mode="after")
+    def validate_location(self) -> "CityInput":
+        has_city = bool(self.city)
+        has_latitude = self.latitude is not None
+        has_longitude = self.longitude is not None
+
+        if has_latitude != has_longitude:
+            raise ValueError("Latitude and longitude must be provided together.")
+
+        if not has_city and not (has_latitude and has_longitude):
+            raise ValueError("Either city or latitude/longitude must be provided.")
+
+        if self.city is not None:
+            self.city = self.city.strip() or None
+            if self.city is not None and len(self.city) < 2:
+                raise ValueError("City name must contain at least 2 characters.")
+
+        return self
 
 
 class RecommendationInput(CityInput):

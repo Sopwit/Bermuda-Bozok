@@ -113,17 +113,19 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ?? '';
 
 export async function fetchDashboard(location: SavedLocation): Promise<DashboardResponse> {
   const body =
-  location.kind === 'city'
-    ? {
-        city: location.city.split(',')[0].trim(),
-        activity: 'walking',
-        language: 'en',
-      }
-    : {
-        city: (location.label ?? `${location.latitude},${location.longitude}`).split(',')[0].trim(),
-        activity: 'walking',
-        language: 'en',
-      };
+    location.kind === 'city'
+      ? {
+          city: location.city.split(',')[0].trim(),
+          activity: 'walking',
+          language: 'en',
+        }
+      : {
+          city: location.label?.trim() || 'Current Location',
+          latitude: location.latitude,
+          longitude: location.longitude,
+          activity: 'walking',
+          language: 'en',
+        };
 
   const response = await fetch(`${API_BASE}/weather/dashboard`, {
     method: 'POST',

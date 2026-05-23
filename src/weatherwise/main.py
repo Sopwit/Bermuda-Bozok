@@ -11,8 +11,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from config import get_settings
-from schemas import (
+from weatherwise.config import get_settings
+from weatherwise.schemas import (
     ActivitiesResponse,
     ActivityRecommendationItem,
     AdviceResponse,
@@ -26,13 +26,14 @@ from schemas import (
     PlanningResponse,
     RecommendationInput,
 )
-from services import (
+from weatherwise.services import (
     activity_recommendation,
     assess_confidence,
     build_activity_windows,
     build_headline,
     build_outfit_plan,
     build_reason,
+    _format_coordinate_location,
     dependencies_status,
     fetch_daily_forecast,
     fetch_forecast_data,
@@ -64,6 +65,17 @@ app.add_middleware(
 )
 
 api_cache = TTLCache(maxsize=1000, ttl=settings.cache_ttl_seconds)
+
+
+def _cache_key(prefix: str, data: RecommendationInput) -> str:
+    if data.latitude is not None and data.longitude is not None:
+        location_part = f"coords:{data.latitude:.6f}:{data.longitude:.6f}"
+    else:
+        location_part = f"city:{(data.city or '').strip().lower()}"
+
+    activity = data.activity or "walking"
+    language = getattr(data, "language", "en")
+    return f"{prefix}:{location_part}:{activity}:{language}"
 
 
 def error_payload(status_code: int, detail: str) -> dict:
@@ -137,24 +149,21 @@ async def cities_search(q: str = Query(..., min_length=2)) -> CitySuggestionsRes
         raise HTTPException(status_code=500, detail="Internal server error.") from exc
 
 def _build_dashboard(data: RecommendationInput) -> DashboardResponse:
-    cache_key = f"dashboard:{data.city.strip().lower()}:{data.activity}:{data.language}"
+    cache_key = _cache_key("dashboard", data)
+    if cache_key in api_cache:
+        return DashboardResponse(**api_cache[cache_key])
 
-    print("CACHE KEY:", cache_key)
-    print("CACHE HIT:", cache_key in api_cache)
-
-# if cache_key in api_cache:
-#     return DashboardResponse(**api_cache[cache_key])
-
-    live_weather = fetch_weather_data(data.city)
-    hourly_forecast = fetch_forecast_data(data.city)
-    daily_forecast = fetch_daily_forecast(data.city)
+    location_label = data.city or _format_coordinate_location(data.latitude, data.longitude)
+    live_weather = fetch_weather_data(data.city, latitude=data.latitude, longitude=data.longitude)
+    hourly_forecast = fetch_forecast_data(data.city, latitude=data.latitude, longitude=data.longitude)
+    daily_forecast = fetch_daily_forecast(data.city, latitude=data.latitude, longitude=data.longitude)
 
     umbrella_needed, umbrella_text, clothing_text = predict_ml_decisions(live_weather)
     activity_result = activity_recommendation(data.activity or "walking", live_weather)
     reason = build_reason(live_weather)
 
     ai_advice = generate_llm_advice(
-        city=data.city,
+        city=location_label,
         weather_condition=live_weather["weather_condition"],
         temp=live_weather["temperature_c"],
         umbrella_text=umbrella_text,
@@ -179,7 +188,7 @@ def _build_dashboard(data: RecommendationInput) -> DashboardResponse:
 
     payload = {
         "status": "success",
-        "location": data.city,
+        "location": location_label,
         "headline": build_headline(live_weather, clothing_text, umbrella_needed, data.language),
         "advice": ai_advice,
         "reason": reason,
@@ -198,21 +207,21 @@ def _build_dashboard(data: RecommendationInput) -> DashboardResponse:
         "hourly_forecast": hourly_forecast,
         "daily_forecast": daily_forecast,
     }
-
-# api_cache[cache_key] = payload
+    api_cache[cache_key] = payload
     return DashboardResponse(**payload)
 
 def _build_recommendation(data: RecommendationInput) -> AdviceResponse:
-    cache_key = f"recommendation:{data.city.strip().lower()}:{data.activity}:{data.language}"
+    cache_key = _cache_key("recommendation", data)
     if cache_key in api_cache:
         return AdviceResponse(**api_cache[cache_key])
 
-    live_weather = fetch_weather_data(data.city)
+    location_label = data.city or _format_coordinate_location(data.latitude, data.longitude)
+    live_weather = fetch_weather_data(data.city, latitude=data.latitude, longitude=data.longitude)
     umbrella_needed, umbrella_text, clothing_text = predict_ml_decisions(live_weather)
     activity_result = activity_recommendation(data.activity or "walking", live_weather)
     reason = build_reason(live_weather)
     ai_advice = generate_llm_advice(
-        city=data.city,
+        city=location_label,
         weather_condition=live_weather["weather_condition"],
         temp=live_weather["temperature_c"],
         umbrella_text=umbrella_text,
@@ -224,7 +233,7 @@ def _build_recommendation(data: RecommendationInput) -> AdviceResponse:
 
     payload = {
         "status": "success",
-        "location": data.city,
+        "location": location_label,
         "headline": build_headline(live_weather, clothing_text, umbrella_needed, data.language),
         "advice": ai_advice,
         "reason": reason,
@@ -291,11 +300,12 @@ async def get_weather_advice(data: RecommendationInput) -> AdviceResponse:
 )
 async def planning_day(data: PlanningInput) -> PlanningResponse:
     try:
-        forecast = fetch_forecast_data(data.city)
+        location_label = data.city or _format_coordinate_location(data.latitude, data.longitude)
+        forecast = fetch_forecast_data(data.city, latitude=data.latitude, longitude=data.longitude)
         best = find_best_time_window(data.activity, forecast)
         return PlanningResponse(
             status="success",
-            location=data.city,
+            location=location_label,
             activity=data.activity,
             best_time_window=best["best_time_window"],
             summary=best["summary"],
@@ -317,7 +327,8 @@ async def planning_day(data: PlanningInput) -> PlanningResponse:
 )
 async def recommendations_activities(data: RecommendationInput) -> ActivitiesResponse:
     try:
-        live_weather = fetch_weather_data(data.city)
+        location_label = data.city or _format_coordinate_location(data.latitude, data.longitude)
+        live_weather = fetch_weather_data(data.city, latitude=data.latitude, longitude=data.longitude)
         results = [
             ActivityRecommendationItem(
                 name=activity_result["activity"],
@@ -329,7 +340,7 @@ async def recommendations_activities(data: RecommendationInput) -> ActivitiesRes
         headline = "Best current outdoor options for quick daily decisions."
         return ActivitiesResponse(
             status="success",
-            location=data.city,
+            location=location_label,
             headline=headline,
             activities=results,
             live_data=live_weather,

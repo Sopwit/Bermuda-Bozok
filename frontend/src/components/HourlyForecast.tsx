@@ -31,7 +31,7 @@ export function HourlyForecast({ entries, liveData }: HourlyForecastProps) {
       .filter((entry) => entry.time_label && entry.time_label.trim() !== '')
       .map((entry) => ({
         time: entry.time_label,
-        kind: toWeatherKind(entry.weather_condition, new Date().toISOString()),
+        kind: toWeatherKind(entry.weather_condition, entry.time_label),
         temp: Math.round(entry.temperature_c),
         pop: clampWeatherPercent(entry.precipitation_mm),
       }));
@@ -42,9 +42,6 @@ export function HourlyForecast({ entries, liveData }: HourlyForecastProps) {
       seen.add(item.time);
       return true;
     });
-
-    console.log('HOURS AFTER BUILD:', merged);
-    console.log('HOURS AFTER BUILD LENGTH:', merged.length);
 
     return merged.slice(0, 24);
   }, [entries, liveData]);
