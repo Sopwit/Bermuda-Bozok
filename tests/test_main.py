@@ -3,6 +3,7 @@ Tests for WeatherWise API endpoints and error handling.
 """
 
 from fastapi import HTTPException
+
 from weatherwise import main
 
 

@@ -8,7 +8,7 @@ trains two classifiers, and persists the artifacts to ``models/``.
 import json
 import logging
 import platform
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import joblib
@@ -77,7 +77,7 @@ def main() -> None:
     joblib.dump(list(X.columns), MODELS_DIR / "model_features.joblib")
 
     metadata = {
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "python_version": platform.python_version(),
         "package_versions": {
             "joblib": joblib.__version__,

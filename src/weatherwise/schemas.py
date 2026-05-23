@@ -7,7 +7,6 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-
 SUPPORTED_ACTIVITIES = ("walking", "cycling", "outdoor_dining")
 
 __all__ = [
@@ -51,7 +50,7 @@ class CityInput(BaseModel):
         return cleaned
 
     @model_validator(mode="after")
-    def validate_location(self) -> "CityInput":
+    def validate_location(self) -> CityInput:
         has_city = bool(self.city)
         has_latitude = self.latitude is not None
         has_longitude = self.longitude is not None
