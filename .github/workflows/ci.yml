@@ -32,6 +32,10 @@ jobs:
           cache: pip
           cache-dependency-path: pyproject.toml
 
+      - name: Install OpenMP runtime (macOS)
+        if: runner.os == 'macOS'
+        run: brew install libomp
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
