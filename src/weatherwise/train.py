@@ -47,9 +47,9 @@ def main() -> None:
     le_clothing = LabelEncoder()
     y_clothing = le_clothing.fit_transform(df["clothing_recommendation"])
 
-    X = df.drop(columns=["umbrella_needed", "clothing_recommendation", "outdoor_suitability_score"])
+    X = df.drop(columns=["umbrella_needed", "clothing_recommendation", "outdoor_suitability_score"])  # noqa: N806
 
-    X_train, X_test, y_train_umb, y_test_umb = train_test_split(
+    X_train, X_test, y_train_umb, y_test_umb = train_test_split(  # noqa: N806
         X, y_umbrella, test_size=0.2, random_state=42,
     )
     _, _, y_train_cloth, y_test_cloth = train_test_split(

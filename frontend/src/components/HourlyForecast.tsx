@@ -1,8 +1,8 @@
-import { useMemo, useRef } from 'react';
-import { WeatherIcon } from './WeatherIcon';
-import { Droplets, ChevronLeft, ChevronRight } from 'lucide-react';
-import type { ForecastEntry, LiveWeatherData } from '../lib/api';
-import { toWeatherKind, type WeatherKind } from '../lib/weather';
+import { useMemo, useRef } from "react";
+import { WeatherIcon } from "./WeatherIcon";
+import { Droplets, ChevronLeft, ChevronRight } from "lucide-react";
+import type { ForecastEntry, LiveWeatherData } from "../lib/api";
+import { toWeatherKind, type WeatherKind } from "../lib/weather";
 
 type Hour = {
   time: string;
@@ -21,14 +21,14 @@ export function HourlyForecast({ entries, liveData }: HourlyForecastProps) {
 
   const hours = useMemo<Hour[]>(() => {
     const currentHourCard: Hour = {
-      time: 'Now',
+      time: "Now",
       kind: toWeatherKind(liveData.weather_condition, new Date().toISOString()),
       temp: Math.round(liveData.temperature_c),
       pop: toPrecipitationPop(liveData.precipitation_mm),
     };
 
     const futureHours: Hour[] = entries
-      .filter((entry) => entry.time_label && entry.time_label.trim() !== '')
+      .filter((entry) => entry.time_label && entry.time_label.trim() !== "")
       .map((entry) => ({
         time: entry.time_label,
         kind: toWeatherKind(entry.weather_condition, entry.time_label),
@@ -46,13 +46,17 @@ export function HourlyForecast({ entries, liveData }: HourlyForecastProps) {
     return merged.slice(0, 24);
   }, [entries, liveData]);
 
-  const max = hours.length ? Math.max(...hours.map((h) => h.temp)) : Math.round(liveData.temperature_c);
-  const low = hours.length ? Math.min(...hours.map((h) => h.temp)) : Math.round(liveData.temperature_c);
+  const max = hours.length
+    ? Math.max(...hours.map((h) => h.temp))
+    : Math.round(liveData.temperature_c);
+  const low = hours.length
+    ? Math.min(...hours.map((h) => h.temp))
+    : Math.round(liveData.temperature_c);
 
   const scrollBy = (dir: 1 | -1) => {
     const el = scrollerRef.current;
     if (!el) return;
-    el.scrollBy({ left: dir * 420, behavior: 'smooth' });
+    el.scrollBy({ left: dir * 420, behavior: "smooth" });
   };
 
   return (
@@ -90,10 +94,7 @@ export function HourlyForecast({ entries, liveData }: HourlyForecastProps) {
           <ChevronRight className="w-4 h-4 text-ink-soft" />
         </button>
 
-        <div
-          ref={scrollerRef}
-          className="overflow-x-auto scroll-smooth px-2"
-        >
+        <div ref={scrollerRef} className="overflow-x-auto scroll-smooth px-2">
           <div className="flex gap-3 py-2 min-w-max">
             {hours.map((h, i) => {
               const isNow = i === 0;
@@ -102,15 +103,19 @@ export function HourlyForecast({ entries, liveData }: HourlyForecastProps) {
                   key={`${h.time}-${i}`}
                   className={`flex flex-col items-center justify-center rounded-2xl border shrink-0 px-4 py-4 w-[92px] min-w-[92px] ${
                     isNow
-                      ? 'bg-accent/10 border-accent/30'
-                      : 'bg-transparent border-line'
+                      ? "bg-accent/10 border-accent/30"
+                      : "bg-transparent border-line"
                   }`}
                 >
-                  <div className={`text-sm font-medium ${isNow ? 'text-accent' : 'text-ink-soft'}`}>
+                  <div
+                    className={`text-sm font-medium ${isNow ? "text-accent" : "text-ink-soft"}`}
+                  >
                     {h.time}
                   </div>
                   <WeatherIcon kind={h.kind} className="w-10 h-10 my-3" />
-                  <div className="font-display text-2xl leading-none text-ink">{h.temp}°</div>
+                  <div className="font-display text-2xl leading-none text-ink">
+                    {h.temp}°
+                  </div>
                   <div className="mt-2 flex items-center gap-1 text-[11px] text-rain">
                     <Droplets className="w-3 h-3" />
                     <span>%{h.pop}</span>

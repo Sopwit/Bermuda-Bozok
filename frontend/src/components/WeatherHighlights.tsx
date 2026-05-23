@@ -1,5 +1,16 @@
-import { ArrowUp, Compass, Droplet, Droplets, Eye, ShieldAlert, Sunrise, Sunset, SunMedium, Wind } from 'lucide-react';
-import type { LiveWeatherData } from '../lib/api';
+import {
+  ArrowUp,
+  Compass,
+  Droplet,
+  Droplets,
+  Eye,
+  ShieldAlert,
+  Sunrise,
+  Sunset,
+  SunMedium,
+  Wind,
+} from "lucide-react";
+import type { LiveWeatherData } from "../lib/api";
 
 type WeatherHighlightsProps = {
   liveData: LiveWeatherData;
@@ -8,8 +19,12 @@ type WeatherHighlightsProps = {
 export function WeatherHighlights({ liveData }: WeatherHighlightsProps) {
   const windDirection = toCompassDirection(liveData.wind_direction_deg);
   const windFill = metricToPercent(liveData.wind_speed_kmh, 60);
-  const uvFill = liveData.uv_index != null ? metricToPercent(liveData.uv_index, 11) : 0;
-  const airFill = liveData.european_aqi != null ? metricToPercent(liveData.european_aqi, 100) : 0;
+  const uvFill =
+    liveData.uv_index != null ? metricToPercent(liveData.uv_index, 11) : 0;
+  const airFill =
+    liveData.european_aqi != null
+      ? metricToPercent(liveData.european_aqi, 100)
+      : 0;
 
   return (
     <section className="card p-5 md:p-6">
@@ -28,7 +43,7 @@ export function WeatherHighlights({ liveData }: WeatherHighlightsProps) {
           <div className="mt-4 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-4">
             <SunMomentCard
               label="Sunrise"
-              time={liveData.sunrise_local ?? '--:--'}
+              time={liveData.sunrise_local ?? "--:--"}
               align="left"
               art={<SunriseArt />}
             />
@@ -44,7 +59,7 @@ export function WeatherHighlights({ liveData }: WeatherHighlightsProps) {
 
             <SunMomentCard
               label="Sunset"
-              time={liveData.sunset_local ?? '--:--'}
+              time={liveData.sunset_local ?? "--:--"}
               align="right"
               art={<SunsetArt />}
             />
@@ -59,11 +74,15 @@ export function WeatherHighlights({ liveData }: WeatherHighlightsProps) {
             </div>
             <div className="mt-4 flex items-center justify-between gap-4">
               <div className="shrink-0">
-                <WindArt direction={liveData.wind_direction_deg} fill={windFill} />
+                <WindArt
+                  direction={liveData.wind_direction_deg}
+                  fill={windFill}
+                />
               </div>
               <div className="flex-1 text-right">
                 <div className="font-display text-3xl leading-none text-ink">
-                  {Math.round(liveData.wind_speed_kmh)} <span className="text-xl text-ink-soft">km/h</span>
+                  {Math.round(liveData.wind_speed_kmh)}{" "}
+                  <span className="text-xl text-ink-soft">km/h</span>
                 </div>
                 <div className="mt-3 flex items-center justify-end gap-2 font-display text-2xl leading-none text-ink">
                   <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-line-soft bg-[rgba(255,255,255,0.72)]">
@@ -76,7 +95,7 @@ export function WeatherHighlights({ liveData }: WeatherHighlightsProps) {
                     ? `Gusts up to ${Math.round(liveData.wind_gust_kmh)} km/h`
                     : liveData.wind_direction_deg != null
                       ? `${Math.round(liveData.wind_direction_deg)}° direction`
-                      : 'Direction unavailable'}
+                      : "Direction unavailable"}
                 </div>
               </div>
             </div>
@@ -93,9 +112,15 @@ export function WeatherHighlights({ liveData }: WeatherHighlightsProps) {
               </div>
               <div className="flex-1 text-right">
                 <div className="font-display text-3xl leading-none text-ink">
-                  {liveData.humidity_pct != null ? `${liveData.humidity_pct}%` : '--'}
+                  {liveData.humidity_pct != null
+                    ? `${liveData.humidity_pct}%`
+                    : "--"}
                 </div>
-                <div className="mt-2 text-sm text-ink-muted">{liveData.humidity_pct != null ? describeHumidity(liveData.humidity_pct) : 'Humidity data unavailable'}</div>
+                <div className="mt-2 text-sm text-ink-muted">
+                  {liveData.humidity_pct != null
+                    ? describeHumidity(liveData.humidity_pct)
+                    : "Humidity data unavailable"}
+                </div>
               </div>
             </div>
           </div>
@@ -111,13 +136,19 @@ export function WeatherHighlights({ liveData }: WeatherHighlightsProps) {
               </div>
               <div className="flex-1 text-right">
                 <div className="font-display text-3xl leading-none text-ink">
-                  {liveData.uv_index != null ? Math.round(liveData.uv_index) : '--'}
+                  {liveData.uv_index != null
+                    ? Math.round(liveData.uv_index)
+                    : "--"}
                 </div>
                 <div className="mt-2 text-sm text-ink-muted">
-                  {liveData.uv_index != null ? describeUv(liveData.uv_index) : 'UV data unavailable'}
+                  {liveData.uv_index != null
+                    ? describeUv(liveData.uv_index)
+                    : "UV data unavailable"}
                 </div>
                 <div className="mt-1 text-xs uppercase tracking-[0.14em] text-ink-muted">
-                  {liveData.cloud_cover_pct != null ? `Cloud cover ${liveData.cloud_cover_pct}%` : 'Exposure estimate'}
+                  {liveData.cloud_cover_pct != null
+                    ? `Cloud cover ${liveData.cloud_cover_pct}%`
+                    : "Exposure estimate"}
                 </div>
               </div>
             </div>
@@ -134,13 +165,17 @@ export function WeatherHighlights({ liveData }: WeatherHighlightsProps) {
               </div>
               <div className="flex-1 text-right">
                 <div className="font-display text-3xl leading-none text-ink">
-                  {liveData.european_aqi ?? '--'}
+                  {liveData.european_aqi ?? "--"}
                 </div>
                 <div className="mt-2 text-sm text-ink-muted">
-                  {liveData.european_aqi != null ? `AQI ${aqiLabel(liveData.european_aqi)}` : 'Air quality unavailable'}
+                  {liveData.european_aqi != null
+                    ? `AQI ${aqiLabel(liveData.european_aqi)}`
+                    : "Air quality unavailable"}
                 </div>
                 <div className="mt-1 text-xs uppercase tracking-[0.14em] text-ink-muted">
-                  {liveData.visibility_km != null ? `${liveData.visibility_km.toFixed(1)} km visibility` : 'Visibility unavailable'}
+                  {liveData.visibility_km != null
+                    ? `${liveData.visibility_km.toFixed(1)} km visibility`
+                    : "Visibility unavailable"}
                 </div>
               </div>
             </div>
@@ -155,15 +190,19 @@ type SunMomentCardProps = {
   label: string;
   time: string;
   art: React.ReactNode;
-  align: 'left' | 'right';
+  align: "left" | "right";
 };
 
 function SunMomentCard({ label, time, art, align }: SunMomentCardProps) {
   return (
-    <div className={`flex items-center gap-3 ${align === 'right' ? 'md:flex-row-reverse md:text-right' : ''}`}>
+    <div
+      className={`flex items-center gap-3 ${align === "right" ? "md:flex-row-reverse md:text-right" : ""}`}
+    >
       <div className="shrink-0">{art}</div>
       <div>
-        <div className="text-[11px] uppercase tracking-[0.16em] text-ink-muted">{label}</div>
+        <div className="text-[11px] uppercase tracking-[0.16em] text-ink-muted">
+          {label}
+        </div>
         <div className="mt-1 font-display text-2xl text-ink">{time}</div>
       </div>
     </div>
@@ -188,7 +227,13 @@ function SunsetArt() {
   );
 }
 
-function WindArt({ direction, fill }: { direction?: number | null; fill: number }) {
+function WindArt({
+  direction,
+  fill,
+}: {
+  direction?: number | null;
+  fill: number;
+}) {
   const rotation = direction ?? 0;
 
   return (
@@ -239,7 +284,10 @@ function ExposureArt({ fill }: { fill: number }) {
         }}
       />
       <div className="absolute inset-[6px] rounded-full bg-card/95" />
-      <SunMedium className="relative h-6 w-6 text-[#d78f32]" strokeWidth={1.9} />
+      <SunMedium
+        className="relative h-6 w-6 text-[#d78f32]"
+        strokeWidth={1.9}
+      />
     </div>
   );
 }
@@ -265,32 +313,32 @@ function metricToPercent(value: number, max: number): number {
 }
 
 function toCompassDirection(value?: number | null): string {
-  if (value == null) return 'Unknown';
+  if (value == null) return "Unknown";
 
-  const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
   const index = ((Math.round(value / 45) % 8) + 8) % 8;
   return directions[index];
 }
 
 function describeHumidity(value: number): string {
-  if (value >= 80) return 'High moisture in the air';
-  if (value >= 55) return 'Balanced indoor-outdoor feel';
-  if (value >= 35) return 'Comfortably dry conditions';
-  return 'Dry air is dominant';
+  if (value >= 80) return "High moisture in the air";
+  if (value >= 55) return "Balanced indoor-outdoor feel";
+  if (value >= 35) return "Comfortably dry conditions";
+  return "Dry air is dominant";
 }
 
 function describeUv(value: number): string {
-  if (value >= 8) return 'High UV exposure outdoors';
-  if (value >= 6) return 'Strong sun on open surfaces';
-  if (value >= 3) return 'Moderate daytime exposure';
-  return 'Low direct sun risk';
+  if (value >= 8) return "High UV exposure outdoors";
+  if (value >= 6) return "Strong sun on open surfaces";
+  if (value >= 3) return "Moderate daytime exposure";
+  return "Low direct sun risk";
 }
 
 function aqiLabel(aqi: number): string {
-  if (aqi <= 20) return 'good';
-  if (aqi <= 40) return 'fair';
-  if (aqi <= 60) return 'moderate';
-  if (aqi <= 80) return 'poor';
-  if (aqi <= 100) return 'very poor';
-  return 'extreme';
+  if (aqi <= 20) return "good";
+  if (aqi <= 40) return "fair";
+  if (aqi <= 60) return "moderate";
+  if (aqi <= 80) return "poor";
+  if (aqi <= 100) return "very poor";
+  return "extreme";
 }

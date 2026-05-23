@@ -93,7 +93,10 @@ class TestActivities:
 
 
 class TestDashboard:
-    def test_supports_coordinate_lookup(self, client, monkeypatch, sample_weather, sample_forecast, sample_daily_forecast, sample_ml_result_no_umbrella):
+    def test_supports_coordinate_lookup(
+        self, client, monkeypatch, sample_weather,
+        sample_forecast, sample_daily_forecast, sample_ml_result_no_umbrella,
+    ):
         def fake_fetch_weather(*args, **kwargs):
             return sample_weather
 

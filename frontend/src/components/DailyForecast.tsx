@@ -1,7 +1,11 @@
-import { WeatherIcon } from './WeatherIcon';
-import { Droplets } from 'lucide-react';
-import type { DailyForecastItem } from '../lib/api';
-import { formatDayLabel, toWeatherKind, type WeatherKind } from '../lib/weather';
+import { WeatherIcon } from "./WeatherIcon";
+import { Droplets } from "lucide-react";
+import type { DailyForecastItem } from "../lib/api";
+import {
+  formatDayLabel,
+  toWeatherKind,
+  type WeatherKind,
+} from "../lib/weather";
 
 type Day = {
   label: string;
@@ -21,7 +25,9 @@ export function DailyForecast({ entries }: DailyForecastProps) {
     const kind = toWeatherKind(entry.weather_condition);
     return {
       label: formatDayLabel(entry.date),
-      pop: entry.precipitation_probability_max_pct ?? toPrecipitationPop(entry.precipitation_total_mm),
+      pop:
+        entry.precipitation_probability_max_pct ??
+        toPrecipitationPop(entry.precipitation_total_mm),
       day: kind,
       night: toNightKind(kind),
       hi: Math.round(entry.temperature_high_c),
@@ -39,8 +45,13 @@ export function DailyForecast({ entries }: DailyForecastProps) {
 
       <ul className="divide-y divide-line-soft">
         {days.map((d) => (
-          <li key={d.label} className="grid grid-cols-12 items-center gap-2 py-3">
-            <div className="col-span-3 md:col-span-2 font-medium text-ink">{d.label}</div>
+          <li
+            key={d.label}
+            className="grid grid-cols-12 items-center gap-2 py-3"
+          >
+            <div className="col-span-3 md:col-span-2 font-medium text-ink">
+              {d.label}
+            </div>
 
             <div className="col-span-3 md:col-span-2 flex items-center gap-1 text-[11px] text-rain">
               <Droplets className="w-3 h-3" />
@@ -60,10 +71,14 @@ export function DailyForecast({ entries }: DailyForecastProps) {
 
             <div className="col-span-3 md:col-span-3 flex items-center justify-end gap-5">
               <div className="text-right min-w-[36px]">
-                <div className="font-display text-xl text-ink-muted tabular-nums">{d.lo}°</div>
+                <div className="font-display text-xl text-ink-muted tabular-nums">
+                  {d.lo}°
+                </div>
               </div>
               <div className="text-right min-w-[36px]">
-                <div className="font-display text-xl text-ink tabular-nums">{d.hi}°</div>
+                <div className="font-display text-xl text-ink tabular-nums">
+                  {d.hi}°
+                </div>
               </div>
             </div>
           </li>
@@ -74,8 +89,8 @@ export function DailyForecast({ entries }: DailyForecastProps) {
 }
 
 function toNightKind(kind: WeatherKind): WeatherKind {
-  if (kind === 'sun' || kind === 'partly' || kind === 'sun-cloud') {
-    return 'moon';
+  if (kind === "sun" || kind === "partly" || kind === "sun-cloud") {
+    return "moon";
   }
   return kind;
 }

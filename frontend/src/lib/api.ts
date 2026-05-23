@@ -1,5 +1,8 @@
-export type RecommendationLevel = 'recommended' | 'acceptable' | 'not_recommended';
-export type ConfidenceLevel = 'low' | 'medium' | 'high';
+export type RecommendationLevel =
+  | "recommended"
+  | "acceptable"
+  | "not_recommended";
+export type ConfidenceLevel = "low" | "medium" | "high";
 
 export type LiveWeatherData = {
   temperature_c: number;
@@ -22,7 +25,7 @@ export type LiveWeatherData = {
 };
 
 export type ActivityItem = {
-  name: 'walking' | 'cycling' | 'outdoor_dining';
+  name: "walking" | "cycling" | "outdoor_dining";
   recommendation: RecommendationLevel;
   reason: string;
 };
@@ -35,13 +38,13 @@ export type OutfitPlan = {
 };
 
 export type WeatherAlert = {
-  severity: 'info' | 'warning' | 'critical';
+  severity: "info" | "warning" | "critical";
   title: string;
   message: string;
 };
 
 export type ActivityWindow = {
-  activity: 'walking' | 'cycling' | 'outdoor_dining';
+  activity: "walking" | "cycling" | "outdoor_dining";
   best_time_window: string;
   summary: string;
   reason: string;
@@ -96,8 +99,8 @@ export type DashboardResponse = {
 };
 
 export type SavedLocation =
-  | { kind: 'city'; city: string }
-  | { kind: 'coords'; latitude: number; longitude: number; label?: string };
+  | { kind: "city"; city: string }
+  | { kind: "coords"; latitude: number; longitude: number; label?: string };
 
 export type LocationSuggestion = {
   name: string;
@@ -109,35 +112,39 @@ export type LocationSuggestion = {
   display_name: string;
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ?? '';
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ?? "";
 
-export async function fetchDashboard(location: SavedLocation): Promise<DashboardResponse> {
+export async function fetchDashboard(
+  location: SavedLocation,
+): Promise<DashboardResponse> {
   const body =
-    location.kind === 'city'
+    location.kind === "city"
       ? {
-          city: location.city.split(',')[0].trim(),
-          activity: 'walking',
-          language: 'en',
+          city: location.city.split(",")[0].trim(),
+          activity: "walking",
+          language: "en",
         }
       : {
-          city: location.label?.trim() || 'Current Location',
+          city: location.label?.trim() || "Current Location",
           latitude: location.latitude,
           longitude: location.longitude,
-          activity: 'walking',
-          language: 'en',
+          activity: "walking",
+          language: "en",
         };
 
   const response = await fetch(`${API_BASE}/weather/dashboard`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
   });
 
   if (!response.ok) {
-    const payload = (await response.json().catch(() => null)) as { detail?: string } | null;
-    throw new Error(payload?.detail ?? 'Unable to load data.');
+    const payload = (await response.json().catch(() => null)) as {
+      detail?: string;
+    } | null;
+    throw new Error(payload?.detail ?? "Unable to load data.");
   }
 
   const payload = await response.json();
@@ -148,12 +155,17 @@ export async function fetchLocationSuggestions(
   query: string,
   signal?: AbortSignal,
 ): Promise<LocationSuggestion[]> {
-  const response = await fetch(`${API_BASE}/cities/search?q=${encodeURIComponent(query)}`, { signal });
+  const response = await fetch(
+    `${API_BASE}/cities/search?q=${encodeURIComponent(query)}`,
+    { signal },
+  );
 
   if (!response.ok) {
     if (response.status === 422) return [];
-    const payload = (await response.json().catch(() => null)) as { detail?: string } | null;
-    throw new Error(payload?.detail ?? 'Unable to load locations.');
+    const payload = (await response.json().catch(() => null)) as {
+      detail?: string;
+    } | null;
+    throw new Error(payload?.detail ?? "Unable to load locations.");
   }
 
   const payload = await response.json();
@@ -162,30 +174,30 @@ export async function fetchLocationSuggestions(
 
 function parseDashboardResponse(payload: unknown): DashboardResponse {
   if (!isRecord(payload)) {
-    throw new Error('Unexpected dashboard response.');
+    throw new Error("Unexpected dashboard response.");
   }
 
   const requiredKeys = [
-    'status',
-    'location',
-    'headline',
-    'advice',
-    'reason',
-    'confidence',
-    'live_data',
-    'ml_decision',
-    'outfit_plan',
-    'activity_advice',
-    'ai_advice',
-    'activities',
-    'activity_windows',
-    'hourly_forecast',
-    'daily_forecast',
+    "status",
+    "location",
+    "headline",
+    "advice",
+    "reason",
+    "confidence",
+    "live_data",
+    "ml_decision",
+    "outfit_plan",
+    "activity_advice",
+    "ai_advice",
+    "activities",
+    "activity_windows",
+    "hourly_forecast",
+    "daily_forecast",
   ] as const;
 
   for (const key of requiredKeys) {
     if (!(key in payload)) {
-      throw new Error('Dashboard response is incomplete.');
+      throw new Error("Dashboard response is incomplete.");
     }
   }
 
@@ -195,7 +207,7 @@ function parseDashboardResponse(payload: unknown): DashboardResponse {
     !Array.isArray(payload.hourly_forecast) ||
     !Array.isArray(payload.daily_forecast)
   ) {
-    throw new Error('Dashboard response is invalid.');
+    throw new Error("Dashboard response is invalid.");
   }
 
   return payload as DashboardResponse;
@@ -211,19 +223,19 @@ function parseLocationSuggestions(payload: unknown): LocationSuggestion[] {
     .map((item) => {
       const latitude = toFiniteNumber(item.latitude);
       const longitude = toFiniteNumber(item.longitude);
-      const name = typeof item.name === 'string' ? item.name : '';
+      const name = typeof item.name === "string" ? item.name : "";
       if (latitude === null || longitude === null || !name) {
         return null;
       }
       return {
         name,
-        country: typeof item.country === 'string' ? item.country : null,
-        admin1: typeof item.admin1 === 'string' ? item.admin1 : null,
-        admin2: typeof item.admin2 === 'string' ? item.admin2 : null,
+        country: typeof item.country === "string" ? item.country : null,
+        admin1: typeof item.admin1 === "string" ? item.admin1 : null,
+        admin2: typeof item.admin2 === "string" ? item.admin2 : null,
         latitude,
         longitude,
         display_name:
-          typeof item.display_name === 'string' && item.display_name.trim()
+          typeof item.display_name === "string" && item.display_name.trim()
             ? item.display_name
             : name,
       };
@@ -232,9 +244,9 @@ function parseLocationSuggestions(payload: unknown): LocationSuggestion[] {
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
+  return typeof value === "object" && value !== null;
 }
 
 function toFiniteNumber(value: unknown): number | null {
-  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }

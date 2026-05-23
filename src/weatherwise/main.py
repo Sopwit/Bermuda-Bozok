@@ -70,6 +70,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+_ERROR_RESPONSES = {
+    404: {"model": ErrorResponse},
+    422: {"model": ErrorResponse},
+    500: {"model": ErrorResponse},
+    502: {"model": ErrorResponse},
+}
+
 api_cache = TTLCache(maxsize=1000, ttl=settings.cache_ttl_seconds)
 
 
@@ -269,7 +276,7 @@ def _build_recommendation(data: RecommendationInput) -> AdviceResponse:
 @app.post(
     "/weather/dashboard",
     response_model=DashboardResponse,
-    responses={404: {"model": ErrorResponse}, 422: {"model": ErrorResponse}, 500: {"model": ErrorResponse}, 502: {"model": ErrorResponse}},
+    responses=_ERROR_RESPONSES,
     tags=["dashboard"],
 )
 async def weather_dashboard(data: RecommendationInput) -> DashboardResponse:
@@ -285,7 +292,7 @@ async def weather_dashboard(data: RecommendationInput) -> DashboardResponse:
 @app.post(
     "/weather/recommendation",
     response_model=AdviceResponse,
-    responses={404: {"model": ErrorResponse}, 422: {"model": ErrorResponse}, 500: {"model": ErrorResponse}, 502: {"model": ErrorResponse}},
+    responses=_ERROR_RESPONSES,
     tags=["recommendations"],
 )
 async def weather_recommendation(data: RecommendationInput) -> AdviceResponse:
@@ -302,7 +309,7 @@ async def weather_recommendation(data: RecommendationInput) -> AdviceResponse:
     "/get-advice",
     response_model=AdviceResponse,
     deprecated=True,
-    responses={404: {"model": ErrorResponse}, 422: {"model": ErrorResponse}, 500: {"model": ErrorResponse}, 502: {"model": ErrorResponse}},
+    responses=_ERROR_RESPONSES,
     tags=["legacy"],
 )
 async def get_weather_advice(data: RecommendationInput) -> AdviceResponse:
@@ -312,7 +319,7 @@ async def get_weather_advice(data: RecommendationInput) -> AdviceResponse:
 @app.post(
     "/planning/day",
     response_model=PlanningResponse,
-    responses={404: {"model": ErrorResponse}, 422: {"model": ErrorResponse}, 500: {"model": ErrorResponse}, 502: {"model": ErrorResponse}},
+    responses=_ERROR_RESPONSES,
     tags=["planning"],
 )
 async def planning_day(data: PlanningInput) -> PlanningResponse:
@@ -339,7 +346,7 @@ async def planning_day(data: PlanningInput) -> PlanningResponse:
 @app.post(
     "/recommendations/activities",
     response_model=ActivitiesResponse,
-    responses={404: {"model": ErrorResponse}, 422: {"model": ErrorResponse}, 500: {"model": ErrorResponse}, 502: {"model": ErrorResponse}},
+    responses=_ERROR_RESPONSES,
     tags=["recommendations"],
 )
 async def recommendations_activities(data: RecommendationInput) -> ActivitiesResponse:
@@ -352,7 +359,10 @@ async def recommendations_activities(data: RecommendationInput) -> ActivitiesRes
                 recommendation=activity_result["recommendation"],
                 reason=activity_result["reason"],
             )
-            for activity_result in [activity_recommendation(name, live_weather) for name in ("walking", "cycling", "outdoor_dining")]
+            for activity_result in [
+                activity_recommendation(name, live_weather)
+                for name in ("walking", "cycling", "outdoor_dining")
+            ]
         ]
         headline = "Best current outdoor options for quick daily decisions."
         return ActivitiesResponse(

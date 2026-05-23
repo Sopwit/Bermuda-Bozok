@@ -1,5 +1,5 @@
-import { AlertTriangle, Info, ShieldAlert } from 'lucide-react';
-import type { WeatherAlert } from '../lib/api';
+import { AlertTriangle, Info, ShieldAlert } from "lucide-react";
+import type { WeatherAlert } from "../lib/api";
 
 type AlertBannerProps = {
   alert: WeatherAlert;
@@ -19,7 +19,9 @@ export function AlertBanner({ alert }: AlertBannerProps) {
           <div className="text-[11px] uppercase tracking-[0.18em] font-semibold opacity-75">
             {meta.eyebrow}
           </div>
-          <div className="mt-1 font-display text-xl text-ink">{alert.title}</div>
+          <div className="mt-1 font-display text-xl text-ink">
+            {alert.title}
+          </div>
           <p className="mt-1 text-sm text-ink-soft">{alert.message}</p>
         </div>
       </div>
@@ -27,24 +29,24 @@ export function AlertBanner({ alert }: AlertBannerProps) {
   );
 }
 
-function getAlertMeta(severity: WeatherAlert['severity']) {
-  if (severity === 'critical') {
+function getAlertMeta(severity: WeatherAlert["severity"]) {
+  if (severity === "critical") {
     return {
-      eyebrow: 'Critical',
+      eyebrow: "Critical",
       icon: ShieldAlert,
-      className: 'border-accent/35 bg-[rgba(179,58,46,0.08)] text-accent',
+      className: "border-accent/35 bg-[rgba(179,58,46,0.08)] text-accent",
     };
   }
-  if (severity === 'warning') {
+  if (severity === "warning") {
     return {
-      eyebrow: 'Attention',
+      eyebrow: "Attention",
       icon: AlertTriangle,
-      className: 'border-[#d7a14b]/35 bg-[rgba(215,161,75,0.1)] text-[#9d6627]',
+      className: "border-[#d7a14b]/35 bg-[rgba(215,161,75,0.1)] text-[#9d6627]",
     };
   }
   return {
-    eyebrow: 'Heads up',
+    eyebrow: "Heads up",
     icon: Info,
-    className: 'border-line bg-[rgba(255,251,240,0.75)] text-ink-soft',
+    className: "border-line bg-[rgba(255,251,240,0.75)] text-ink-soft",
   };
 }

@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
-import { Footprints, Layers3, Sparkles, Umbrella } from 'lucide-react';
-import type { OutfitPlan } from '../lib/api';
+import type { ReactNode } from "react";
+import { Footprints, Layers3, Sparkles, Umbrella } from "lucide-react";
+import type { OutfitPlan } from "../lib/api";
 
 type OutfitPlanCardProps = {
   outfit: OutfitPlan;
@@ -22,7 +22,9 @@ export function OutfitPlanCard({ outfit }: OutfitPlanCardProps) {
           <div className="text-[11px] uppercase tracking-[0.18em] text-ink-muted font-semibold">
             Outfit Plan
           </div>
-          <p className="font-display italic text-ink text-lg leading-snug">{normalizedSummary}</p>
+          <p className="font-display italic text-ink text-lg leading-snug">
+            {normalizedSummary}
+          </p>
         </div>
       </header>
 
@@ -83,28 +85,28 @@ function InfoCard({ icon, title, items, fallback }: InfoCardProps) {
 
 function normalizeList(values: string[]): string[] {
   const normalized = values
-    .map((value) => value.trim().replace(/\s+/g, ' '))
+    .map((value) => value.trim().replace(/\s+/g, " "))
     .filter(Boolean)
     .map(cleanPhrase);
 
-  return Array.from(new Set(normalized.map((item) => item.toLowerCase())))
-    .map((key) => normalized.find((item) => item.toLowerCase() === key) as string);
+  return Array.from(new Set(normalized.map((item) => item.toLowerCase()))).map(
+    (key) => normalized.find((item) => item.toLowerCase() === key) as string,
+  );
 }
 
 function formatSummary(summary: string): string {
-  const trimmed = summary.trim().replace(/\s+/g, ' ');
-  if (!trimmed) return 'Plan your outfit based on today\'s weather.';
+  const trimmed = summary.trim().replace(/\s+/g, " ");
+  if (!trimmed) return "Plan your outfit based on today's weather.";
 
-  const noTrailingPunctuation = trimmed.replace(/[\s:;,.-]+$/g, '');
-  const sentence = noTrailingPunctuation.charAt(0).toUpperCase() + noTrailingPunctuation.slice(1);
+  const noTrailingPunctuation = trimmed.replace(/[\s:;,.-]+$/g, "");
+  const sentence =
+    noTrailingPunctuation.charAt(0).toUpperCase() +
+    noTrailingPunctuation.slice(1);
   return /[.!?]$/.test(sentence) ? sentence : `${sentence}.`;
 }
 
 function cleanPhrase(value: string): string {
-  const normalized = value
-    .replace(/_/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  const normalized = value.replace(/_/g, " ").replace(/\s+/g, " ").trim();
 
   if (!normalized) return normalized;
   return normalized.charAt(0).toUpperCase() + normalized.slice(1);

@@ -286,7 +286,12 @@ def fetch_air_quality_data(lat: float, lon: float) -> dict:
         "pm10_ugm3": float(current["pm10"]) if current.get("pm10") is not None else None,
     }
 
-def fetch_weather_data(city: str | None = None, *, latitude: float | None = None, longitude: float | None = None) -> dict:
+def fetch_weather_data(
+    city: str | None = None,
+    *,
+    latitude: float | None = None,
+    longitude: float | None = None,
+) -> dict:
     if latitude is not None and longitude is not None:
         lat, lon = latitude, longitude
         w_data = _fetch_weather_payload(latitude, longitude)
@@ -317,9 +322,13 @@ def fetch_weather_data(city: str | None = None, *, latitude: float | None = None
         "wind_speed_kmh": float(current["wind_speed_10m"]),
         "wind_gust_kmh": float(current.get("wind_gusts_10m")) if current.get("wind_gusts_10m") is not None else None,
         "humidity_pct": int(current["relative_humidity_2m"]),
-        "wind_direction_deg": float(current.get("wind_direction_10m")) if current.get("wind_direction_10m") is not None else None,
-        "cloud_cover_pct": int(current.get("cloud_cover")) if current.get("cloud_cover") is not None else None,
-        "visibility_km": round(float(current["visibility"]) / 1000, 1) if current.get("visibility") is not None else None,
+        "wind_direction_deg": (
+            float(current["wind_direction_10m"]) if current.get("wind_direction_10m") is not None else None
+        ),
+        "cloud_cover_pct": int(current["cloud_cover"]) if current.get("cloud_cover") is not None else None,
+        "visibility_km": (
+            round(float(current["visibility"]) / 1000, 1) if current.get("visibility") is not None else None
+        ),
         "uv_index": float(current.get("uv_index")) if current.get("uv_index") is not None else None,
         "european_aqi": air_quality["european_aqi"],
         "pm2_5_ugm3": air_quality["pm2_5_ugm3"],
@@ -360,7 +369,9 @@ def fetch_forecast_data(
                 "wind_speed_kmh": float(hourly["wind_speed_10m"][i]),
                 "wind_gust_kmh": float(hourly["wind_gusts_10m"][i]) if hourly.get("wind_gusts_10m") else None,
                 "humidity_pct": int(hourly["relative_humidity_2m"][i]),
-                "wind_direction_deg": float(hourly["wind_direction_10m"][i]) if hourly.get("wind_direction_10m") else None,
+                "wind_direction_deg": (
+                    float(hourly["wind_direction_10m"][i]) if hourly.get("wind_direction_10m") else None
+                ),
                 "cloud_cover_pct": int(hourly["cloud_cover"][i]) if hourly.get("cloud_cover") else None,
                 "visibility_km": round(float(hourly["visibility"][i]) / 1000, 1) if hourly.get("visibility") else None,
                 "uv_index": float(hourly["uv_index"][i]) if hourly.get("uv_index") else None,
@@ -375,7 +386,12 @@ def fetch_forecast_data(
         )
 
     now = datetime.now()
-    upcoming = [entry for entry, raw_time in zip(entries, hourly["time"]) if datetime.fromisoformat(raw_time) >= now.replace(minute=0, second=0, microsecond=0)]
+    cutoff = now.replace(minute=0, second=0, microsecond=0)
+    upcoming = [
+        entry
+        for entry, raw_time in zip(entries, hourly["time"])
+        if datetime.fromisoformat(raw_time) >= cutoff
+    ]
 
     if len(upcoming) >= 24:
         return upcoming[:24]
@@ -411,9 +427,15 @@ def fetch_daily_forecast(
                 "temperature_high_c": float(daily["temperature_2m_max"][i]),
                 "temperature_low_c": float(daily["temperature_2m_min"][i]),
                 "precipitation_total_mm": float(daily["precipitation_sum"][i]),
-                "precipitation_probability_max_pct": int(daily["precipitation_probability_max"][i]) if daily.get("precipitation_probability_max") else None,
+                "precipitation_probability_max_pct": (
+                    int(daily["precipitation_probability_max"][i])
+                    if daily.get("precipitation_probability_max") else None
+                ),
                 "uv_index_max": float(daily["uv_index_max"][i]) if daily.get("uv_index_max") else None,
-                "sunshine_duration_hours": round(float(daily["sunshine_duration"][i]) / 3600, 1) if daily.get("sunshine_duration") else None,
+                "sunshine_duration_hours": (
+                    round(float(daily["sunshine_duration"][i]) / 3600, 1)
+                    if daily.get("sunshine_duration") else None
+                ),
                 "wind_gust_max_kmh": float(daily["wind_gusts_10m_max"][i]) if daily.get("wind_gusts_10m_max") else None,
                 "sunrise_local": daily["sunrise"][i][-5:] if daily.get("sunrise") else None,
                 "sunset_local": daily["sunset"][i][-5:] if daily.get("sunset") else None,
@@ -757,7 +779,8 @@ def _build_llm_prompts(
     system_prompt = (
         "You are a friendly lifestyle assistant in a weather app. "
         "Write exactly 2 short natural English sentences. "
-        "Do not mention numbers, temperature, degrees, humidity, wind speed, precipitation, or weather condition names. "
+        "Do not mention numbers, temperature, degrees, humidity, "
+        "wind speed, precipitation, or weather condition names. "
         "Do not sound technical or robotic. "
         "Do not repeat the structured data shown elsewhere in the interface. "
         "Focus on helpful everyday guidance. "
@@ -1057,9 +1080,11 @@ def build_activity_windows(forecast_entries: list[dict]) -> list[dict]:
         best = find_best_time_window(activity, forecast_entries)
 
         if best["recommendation"] == "not_recommended":
-            summary = f"{activity.replace('_', ' ').capitalize()} is generally weak today; this is the least risky window."
+            label = activity.replace("_", " ").capitalize()
+            summary = f"{label} is generally weak today; this is the least risky window."
         elif best["recommendation"] == "acceptable":
-            summary = f"{activity.replace('_', ' ').capitalize()} is possible in this window, but conditions are mixed."
+            label = activity.replace("_", " ").capitalize()
+            summary = f"{label} is possible in this window, but conditions are mixed."
         else:
             summary = f"Best time for {activity.replace('_', ' ')} is around {best['best_time_window']}."
 

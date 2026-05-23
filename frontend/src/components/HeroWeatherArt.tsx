@@ -1,35 +1,41 @@
 type HeroWeatherKind =
-  | 'sun'
-  | 'moon'
-  | 'sun-cloud'
-  | 'cloud'
-  | 'rain'
-  | 'thunder'
-  | 'snow'
-  | 'mist';
+  | "sun"
+  | "moon"
+  | "sun-cloud"
+  | "cloud"
+  | "rain"
+  | "thunder"
+  | "snow"
+  | "mist";
 
-export function HeroWeatherArt({ kind, className = '' }: { kind: HeroWeatherKind; className?: string }) {
+export function HeroWeatherArt({
+  kind,
+  className = "",
+}: {
+  kind: HeroWeatherKind;
+  className?: string;
+}) {
   switch (kind) {
-    case 'sun':
+    case "sun":
       return <SunArt className={className} />;
-    case 'moon':
+    case "moon":
       return <MoonArt className={className} />;
-    case 'sun-cloud':
+    case "sun-cloud":
       return <SunCloudArt className={className} />;
-    case 'cloud':
+    case "cloud":
       return <CloudArt className={className} />;
-    case 'rain':
+    case "rain":
       return <RainArt className={className} />;
-    case 'thunder':
+    case "thunder":
       return <ThunderArt className={className} />;
-    case 'snow':
+    case "snow":
       return <SnowArt className={className} />;
-    case 'mist':
+    case "mist":
       return <MistArt className={className} />;
   }
 }
 
-function SunArt({ className = '' }: { className?: string }) {
+function SunArt({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 200 200" className={className} aria-hidden>
       <defs>
@@ -40,7 +46,10 @@ function SunArt({ className = '' }: { className?: string }) {
         </radialGradient>
         <filter id="glowHeroSun" x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation="6" result="b" />
-          <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+          <feMerge>
+            <feMergeNode in="b" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
         </filter>
       </defs>
       <g className="spin-slow">
@@ -58,18 +67,28 @@ function SunArt({ className = '' }: { className?: string }) {
       <g filter="url(#glowHeroSun)">
         <circle cx="100" cy="100" r="44" fill="url(#sunCoreHero)" />
       </g>
-      <circle cx="100" cy="100" r="46" fill="none" stroke="#B33A2E" strokeWidth="2.5" />
+      <circle
+        cx="100"
+        cy="100"
+        r="46"
+        fill="none"
+        stroke="#B33A2E"
+        strokeWidth="2.5"
+      />
     </svg>
   );
 }
 
-function MoonArt({ className = '' }: { className?: string }) {
+function MoonArt({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 200 200" className={className} aria-hidden>
       <defs>
         <filter id="glowHeroMoon" x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation="5" result="b" />
-          <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+          <feMerge>
+            <feMergeNode in="b" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
         </filter>
       </defs>
       <g filter="url(#glowHeroMoon)">
@@ -87,7 +106,7 @@ function MoonArt({ className = '' }: { className?: string }) {
   );
 }
 
-function CloudArt({ className = '' }: { className?: string }) {
+function CloudArt({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 200 200" className={className} aria-hidden>
       <g fill="#F1E6D0" stroke="#8A7760" strokeWidth="4" strokeLinejoin="round">
@@ -97,11 +116,18 @@ function CloudArt({ className = '' }: { className?: string }) {
   );
 }
 
-function SunCloudArt({ className = '' }: { className?: string }) {
+function SunCloudArt({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 200 200" className={className} aria-hidden>
       <g transform="translate(92 28)">
-        <circle cx="28" cy="28" r="18" fill="#F4C26B" stroke="#E8A43A" strokeWidth="3" />
+        <circle
+          cx="28"
+          cy="28"
+          r="18"
+          fill="#F4C26B"
+          stroke="#E8A43A"
+          strokeWidth="3"
+        />
         <g stroke="#E8A43A" strokeWidth="3" strokeLinecap="round">
           <line x1="28" y1="0" x2="28" y2="10" />
           <line x1="28" y1="46" x2="28" y2="56" />
@@ -120,7 +146,7 @@ function SunCloudArt({ className = '' }: { className?: string }) {
   );
 }
 
-function RainArt({ className = '' }: { className?: string }) {
+function RainArt({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 200 200" className={className} aria-hidden>
       <g fill="#D8E4EC" stroke="#6E98BB" strokeWidth="4" strokeLinejoin="round">
@@ -135,18 +161,24 @@ function RainArt({ className = '' }: { className?: string }) {
   );
 }
 
-function ThunderArt({ className = '' }: { className?: string }) {
+function ThunderArt({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 200 200" className={className} aria-hidden>
       <g fill="#D8E4EC" stroke="#6E98BB" strokeWidth="4" strokeLinejoin="round">
         <path d="M46 112c0-15 12-27 27-27 4-13 16-22 31-22 19 0 35 14 38 32h3c15 0 27 12 27 27s-12 27-27 27H59c-17 0-31-14-31-31 0-5 2-10 6-13z" />
       </g>
-      <path d="M103 138l-18 26h18l-10 26 34-40h-19l10-22z" fill="#F0B13C" stroke="#B07520" strokeWidth="3" strokeLinejoin="round" />
+      <path
+        d="M103 138l-18 26h18l-10 26 34-40h-19l10-22z"
+        fill="#F0B13C"
+        stroke="#B07520"
+        strokeWidth="3"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
 
-function SnowArt({ className = '' }: { className?: string }) {
+function SnowArt({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 200 200" className={className} aria-hidden>
       <g fill="#E7F1F7" stroke="#8AA9C1" strokeWidth="4" strokeLinejoin="round">
@@ -161,7 +193,7 @@ function SnowArt({ className = '' }: { className?: string }) {
   );
 }
 
-function MistArt({ className = '' }: { className?: string }) {
+function MistArt({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 200 200" className={className} aria-hidden>
       <g fill="#F1E6D0" stroke="#8A7760" strokeWidth="4" strokeLinejoin="round">
