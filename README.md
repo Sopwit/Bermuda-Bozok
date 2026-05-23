@@ -33,26 +33,35 @@ postman/                    # Postman workspace files for demo and review
 
 ## Setup
 
-Recommended runtime: `Python 3.11+` (tested on 3.14)
+Recommended runtime: `Python 3.11+` (tested on 3.11–3.14)
 
-1. Create a virtual environment:
-   ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate
-   ```
-2. Install the package with dependencies:
-   ```bash
-   pip install -e .
-   ```
-3. (Optional) Install dev/test dependencies:
-   ```bash
-   pip install -e ".[dev]"
-   ```
-4. Copy `.env.example` to `.env` and set `HF_API_KEY` if you want LLM-backed copy.
-5. Start the API:
-   ```bash
-   uvicorn weatherwise.main:app --reload --port 8000
-   ```
+### Unix (macOS / Linux)
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+pip install -e ".[dev]"     # optional: dev/test deps
+```
+
+### Windows (PowerShell)
+
+```powershell
+python -m venv .venv
+.venv\Scripts\activate
+pip install -e .
+pip install -e ".[dev]"     # optional: dev/test deps
+```
+
+### Environment
+
+Copy `.env.example` to `.env` and set `HF_API_KEY` if you want LLM-backed copy.
+
+### Start the API
+
+```bash
+uvicorn weatherwise.main:app --reload --port 8000
+```
 
 ## Environment Variables
 
@@ -154,19 +163,35 @@ If you also want the collection to appear in the Postman web workspace, use `Pub
 
 ## Test
 
-Run:
+### Unix (macOS / Linux)
 
 ```bash
 python3 -m pytest
+```
+
+### Windows (PowerShell)
+
+```powershell
+python -m pytest
 ```
 
 ## Run on error
 
 ### Backend
 
+**Unix (macOS / Linux):**
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
+pip install -e .
+pip install -e ".[dev]"
+uvicorn weatherwise.main:app --reload --port 8000
+```
+
+**Windows (PowerShell):**
+```powershell
+python -m venv .venv
+.venv\Scripts\activate
 pip install -e .
 pip install -e ".[dev]"
 uvicorn weatherwise.main:app --reload --port 8000
