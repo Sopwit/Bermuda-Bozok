@@ -1,14 +1,12 @@
-cachetools~=5.5
-fastapi~=0.115
-joblib~=1.4
-pandas~=2.2
-pydantic~=2.10
-python-dotenv~=1.1
-requests~=2.32
-scikit-learn~=1.6
-uvicorn~=0.34
-xgboost~=2.1
-
-# Dev / test dependencies (install with: pip install -e ".[dev]")
-pytest~=8.3
-httpx~=0.28
+# === Runtime Dependencies ===
+# These are defined in pyproject.toml under [project.dependencies].
+# Install via:  pip install -e .
+#
+# === Dev / Test Dependencies ===
+# Defined in pyproject.toml under [project.optional-dependencies] dev.
+# Install via:  pip install -e ".[dev]"
+#
+# This file exists as a convenience reference and for CI environments
+# that require a flat requirements file. To install everything at once:
+#
+#   pip install -e ".[dev]"

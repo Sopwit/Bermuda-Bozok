@@ -4,38 +4,59 @@ WeatherWise is a FastAPI service that converts weather signals into short, human
 
 ## Product Scope
 
-- Live weather data from OpenWeatherMap
+- Live weather data from Open-Meteo
 - ML-based clothing and umbrella recommendations
-- Gemini-powered short recommendation copy
+- Hugging Face-powered short recommendation copy
 - Planning support for daily activity timing
 - Postman collection ready for technical checkpoint and jury demo
 
 ## Project Structure
 
-- `main.py`: FastAPI routes and error handling
-- `services.py`: weather access, ML inference, planning, and AI recommendation logic
-- `schemas.py`: request and response models
-- `config.py`: environment-based runtime settings
-- `tests/`: API tests
-- `postman/`: Postman workspace files for demo and review
-- `model_metadata.json`: model artifact generation metadata
+```
+src/
+└── weatherwise/            # Application package
+    ├── main.py             # FastAPI routes and error handling
+    ├── services.py         # Weather access, ML inference, planning, AI recommendation
+    ├── schemas.py          # Request and response models
+    ├── config.py           # Environment-based runtime settings
+    └── train.py            # ML model training script
+models/                     # Trained model artifacts (.joblib)
+data/                       # CSV datasets for training
+tests/                      # API tests
+frontend/                   # Frontend application (React + TypeScript)
+postman/                    # Postman workspace files for demo and review
+```
 
 ## Setup
 
-Recommended runtime: `Python 3.12`
+Recommended runtime: `Python 3.11+` (tested on 3.14)
 
-1. Create a virtual environment with `python3.12 -m venv .venv312`.
-2. Activate it with `source .venv312/bin/activate`.
-3. Install dependencies with `pip install -r requirements.txt`.
-4. Copy `.env.example` to `.env` and fill in your API keys.
-5. Start the API with `uvicorn main:app --reload --port 8000`.
+1. Create a virtual environment:
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
+2. Install the package with dependencies:
+   ```bash
+   pip install -e .
+   ```
+3. (Optional) Install dev/test dependencies:
+   ```bash
+   pip install -e ".[dev]"
+   ```
+4. Copy `.env.example` to `.env` and set `HF_API_KEY` if you want LLM-backed copy.
+5. Start the API:
+   ```bash
+   uvicorn weatherwise.main:app --reload --port 8000
+   ```
 
 ## Environment Variables
 
-- `OWM_API_KEY`: OpenWeatherMap API key
-- `GEMINI_API_KEY`: Gemini API key
-- `WEATHERWISE_CACHE_TTL_SECONDS`: cache duration in seconds, default `1800`
-- `WEATHERWISE_REQUEST_TIMEOUT_SECONDS`: outbound weather request timeout, default `10`
+- `HF_API_KEY`: Hugging Face Inference Router API key
+- `WEATHERWISE_CACHE_TTL_SECONDS`: cache duration in seconds, default `600`
+- `WEATHERWISE_REQUEST_TIMEOUT_SECONDS`: outbound weather request timeout, default `5`
+
+Weather lookups use Open-Meteo and do not require a key.
 
 ## API Endpoints
 
@@ -85,17 +106,23 @@ Use the `Local` environment and run the backend on port `8000`.
 
 ### What to submit to GitHub
 
-- Backend source files
+- `src/` - Application source code
+- `tests/` - Test suite
+- `models/` - Trained model artifacts
+- `data/` - Training datasets
+- `frontend/` - Frontend application
 - `postman/` and `.postman/` folders
 - `requirements.txt`
+- `pyproject.toml`
 - `README.md`
-- `model_metadata.json`
-- Model artifacts used by the API
 
 ### What not to submit
 
 - `.env`
-- `.venv/` or `.venv312/`
+- `.venv/` or `venv/` or `.venv312/`
+- `node_modules/`
+- `__pycache__/`, `.pytest_cache/`, `.egg-info/`
+- `dist/`, `build/`
 - local cache folders
 
 ### Recommended jury demo order
@@ -126,30 +153,25 @@ If you also want the collection to appear in the Postman web workspace, use `Pub
 Run:
 
 ```bash
-.venv312/bin/python -m pytest
+python3 -m pytest
 ```
 
 ## Run on error
 
 ### Backend
 
-python -m venv venv
-
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-
-venv\Scripts\activate
-
-pip install -r requirements.txt
-
-uvicorn main:app --reload --port 8000
-
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+pip install -e ".[dev]"
+uvicorn weatherwise.main:app --reload --port 8000
+```
 
 ### Frontend
 
+```bash
 cd frontend
-
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-
 npm install
-
 npm run dev
+```

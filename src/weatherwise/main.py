@@ -1,6 +1,10 @@
 """
 Main FastAPI application entry point.
+
+Registers routes, exception handlers, middleware, and a TTL-based response
+cache for the WeatherWise API.
 """
+
 from __future__ import annotations
 
 import logging
@@ -27,13 +31,13 @@ from weatherwise.schemas import (
     RecommendationInput,
 )
 from weatherwise.services import (
+    _format_coordinate_location,
     activity_recommendation,
     assess_confidence,
     build_activity_windows,
     build_headline,
     build_outfit_plan,
     build_reason,
-    _format_coordinate_location,
     dependencies_status,
     fetch_daily_forecast,
     fetch_forecast_data,
@@ -46,7 +50,9 @@ from weatherwise.services import (
 )
 
 logging.basicConfig(level=logging.INFO)
+
 settings = get_settings()
+
 app = FastAPI(
     title="WeatherWise API",
     description="WeatherWise transforms live weather into short, human-friendly recommendations and planning signals.",
@@ -72,7 +78,6 @@ def _cache_key(prefix: str, data: RecommendationInput) -> str:
         location_part = f"coords:{data.latitude:.6f}:{data.longitude:.6f}"
     else:
         location_part = f"city:{(data.city or '').strip().lower()}"
-
     activity = data.activity or "walking"
     language = getattr(data, "language", "en")
     return f"{prefix}:{location_part}:{activity}:{language}"
@@ -109,6 +114,9 @@ async def validation_exception_handler(_: Request, exc: RequestValidationError) 
     )
 
 
+# ── System ──────────────────────────────────────────────────────────────
+
+
 @app.get(
     "/health",
     response_model=HealthResponse,
@@ -136,7 +144,6 @@ async def cities_search(q: str = Query(..., min_length=2)) -> CitySuggestionsRes
     try:
         cleaned = q.strip()
         results = search_city_suggestions(cleaned)
-
         return CitySuggestionsResponse(
             status="success",
             query=cleaned,
@@ -147,6 +154,10 @@ async def cities_search(q: str = Query(..., min_length=2)) -> CitySuggestionsRes
     except Exception as exc:
         logging.exception("Unhandled error in /cities/search")
         raise HTTPException(status_code=500, detail="Internal server error.") from exc
+
+
+# ── Internal builders ───────────────────────────────────────────────────
+
 
 def _build_dashboard(data: RecommendationInput) -> DashboardResponse:
     cache_key = _cache_key("dashboard", data)
@@ -210,6 +221,7 @@ def _build_dashboard(data: RecommendationInput) -> DashboardResponse:
     api_cache[cache_key] = payload
     return DashboardResponse(**payload)
 
+
 def _build_recommendation(data: RecommendationInput) -> AdviceResponse:
     cache_key = _cache_key("recommendation", data)
     if cache_key in api_cache:
@@ -220,6 +232,7 @@ def _build_recommendation(data: RecommendationInput) -> AdviceResponse:
     umbrella_needed, umbrella_text, clothing_text = predict_ml_decisions(live_weather)
     activity_result = activity_recommendation(data.activity or "walking", live_weather)
     reason = build_reason(live_weather)
+
     ai_advice = generate_llm_advice(
         city=location_label,
         weather_condition=live_weather["weather_condition"],
@@ -250,6 +263,9 @@ def _build_recommendation(data: RecommendationInput) -> AdviceResponse:
     return AdviceResponse(**payload)
 
 
+# ── Endpoints ───────────────────────────────────────────────────────────
+
+
 @app.post(
     "/weather/dashboard",
     response_model=DashboardResponse,
@@ -264,6 +280,7 @@ async def weather_dashboard(data: RecommendationInput) -> DashboardResponse:
     except Exception as exc:
         logging.exception("Unhandled error in /weather/dashboard")
         raise HTTPException(status_code=500, detail="Internal server error.") from exc
+
 
 @app.post(
     "/weather/recommendation",

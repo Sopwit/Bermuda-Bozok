@@ -10,6 +10,30 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 SUPPORTED_ACTIVITIES = ("walking", "cycling", "outdoor_dining")
 
+__all__ = [
+    "ActivitiesResponse",
+    "ActivityAdvice",
+    "ActivityRecommendationItem",
+    "ActivityWindow",
+    "AdviceResponse",
+    "CityInput",
+    "CitySuggestionItem",
+    "CitySuggestionsResponse",
+    "DailyForecastItem",
+    "DashboardResponse",
+    "ErrorResponse",
+    "ForecastEntry",
+    "HealthDependencies",
+    "HealthResponse",
+    "LiveWeatherData",
+    "MLDecision",
+    "OutfitPlan",
+    "PlanningInput",
+    "PlanningResponse",
+    "RecommendationInput",
+    "WeatherAlert",
+]
+
 
 class CityInput(BaseModel):
     city: str | None = Field(default=None, max_length=100, description="City name to query.")

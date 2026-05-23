@@ -1,16 +1,69 @@
-.env
+# --- Python ---
 __pycache__/
-.pytest_cache/
-.venv/
-.venv312/
-venv/
-*.pyc
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
 *.egg-info/
 dist/
 build/
-node_modules/
-.DS_Store
+*.so
+.python-version
+
+# --- Testing & Coverage ---
+.pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
+coverage.xml
+.tox/
+.nox/
+
+# --- Linting & Type Checking ---
 .mypy_cache/
 .ruff_cache/
+.flake8_cache/
+
+# --- Virtual Environments ---
+.venv/
+.venv*/
+venv/
+env/
+.env/
+
+# --- Environment Files ---
+.env
+.env.local
+.env.production
+.env.development
+
+# --- IDE / Editor ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.iml
+
+# --- OS ---
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*.~
+
+# --- Frontend ---
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.next/

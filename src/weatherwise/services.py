@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import logging
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 from functools import lru_cache
 
 from pathlib import Path
@@ -17,6 +17,24 @@ from fastapi import HTTPException
 
 from weatherwise.config import get_settings
 
+__all__ = [
+    "activity_recommendation",
+    "assess_confidence",
+    "build_activity_windows",
+    "build_headline",
+    "build_outfit_plan",
+    "build_reason",
+    "dependencies_status",
+    "fetch_daily_forecast",
+    "fetch_forecast_data",
+    "fetch_weather_data",
+    "find_best_time_window",
+    "generate_llm_advice",
+    "geocode_city",
+    "model_assets_available",
+    "predict_ml_decisions",
+    "search_city_suggestions",
+]
 
 logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -155,10 +173,10 @@ def _get_json(url: str, *, params: dict) -> dict:
         ) from exc
 
     if response.status_code == 404:
-        city = params.get("name", "unknown")
+        city_name = params.get("name") or "the requested location"
         raise HTTPException(
             status_code=404,
-            detail=f"'{city}' is not a valid city. Please check the spelling.",
+            detail=f"'{city_name}' is not a valid city. Please check the spelling.",
         )
 
     if response.status_code != 200:
@@ -531,7 +549,6 @@ def activity_recommendation(activity: str, weather_dict: dict) -> dict:
 
 
 def summarize_advice(
-    city: str,
     weather_dict: dict,
     clothing_text: str,
     umbrella_needed: bool,
@@ -827,7 +844,6 @@ def generate_llm_advice(
     settings = get_settings()
 
     fallback_msg = summarize_advice(
-        city,
         {
             "weather_condition": weather_condition,
             "temperature_c": temp,
