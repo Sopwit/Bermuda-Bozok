@@ -1,0 +1,36 @@
+# Auto-detect text files and normalize line endings
+* text=auto
+
+# Python
+*.py text diff=python
+*.pyw text
+*.cfg text
+*.ini text
+*.toml text
+*.yaml text
+*.yml text
+*.json text
+*.csv text
+
+# Frontend
+*.ts text diff=typescript
+*.tsx text diff=typescript
+*.js text
+*.jsx text
+*.css text
+*.html text
+*.svg text
+*.md text
+
+# Binary / generated — keep as-is
+*.joblib binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.woff2 binary
+*.lock -diff
+
+# Git
+*.gitignore text
+.gitattributes text

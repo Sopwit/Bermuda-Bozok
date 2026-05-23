@@ -1,5 +1,9 @@
 # Bermuda_Bozok_WeatherWise
 
+[![CI](https://github.com/Bermuda-Bozok/WeatherWise/actions/workflows/ci.yml/badge.svg)](https://github.com/Bermuda-Bozok/WeatherWise/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.11%20|%203.12%20|%203.13%20|%203.14-blue)](pyproject.toml)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 WeatherWise is a FastAPI service that converts weather signals into short, human-friendly decisions for daily life. Instead of behaving like a raw weather dashboard, it focuses on product outputs such as whether to take an umbrella, what to wear, which outdoor activity is suitable, and the best time window for that activity.
 
 ## Product Scope
