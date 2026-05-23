@@ -1,8 +1,8 @@
 import { useMemo, useRef } from 'react';
-import { WeatherIcon, type WeatherKind } from './WeatherIcon';
+import { WeatherIcon } from './WeatherIcon';
 import { Droplets, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { ForecastEntry, LiveWeatherData } from '../lib/api';
-import { toWeatherKind } from '../lib/weather';
+import { toWeatherKind, type WeatherKind } from '../lib/weather';
 
 type Hour = {
   time: string;
@@ -24,7 +24,7 @@ export function HourlyForecast({ entries, liveData }: HourlyForecastProps) {
       time: 'Now',
       kind: toWeatherKind(liveData.weather_condition, new Date().toISOString()),
       temp: Math.round(liveData.temperature_c),
-      pop: clampWeatherPercent(liveData.precipitation_mm),
+      pop: toPrecipitationPop(liveData.precipitation_mm),
     };
 
     const futureHours: Hour[] = entries
@@ -33,7 +33,7 @@ export function HourlyForecast({ entries, liveData }: HourlyForecastProps) {
         time: entry.time_label,
         kind: toWeatherKind(entry.weather_condition, entry.time_label),
         temp: Math.round(entry.temperature_c),
-        pop: clampWeatherPercent(entry.precipitation_mm),
+        pop: toPrecipitationPop(entry.precipitation_mm),
       }));
 
     const seen = new Set<string>();
@@ -125,6 +125,6 @@ export function HourlyForecast({ entries, liveData }: HourlyForecastProps) {
   );
 }
 
-function clampWeatherPercent(value: number): number {
+function toPrecipitationPop(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value * 10)));
 }

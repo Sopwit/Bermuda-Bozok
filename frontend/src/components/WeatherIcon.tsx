@@ -1,8 +1,7 @@
 import type { SVGProps } from 'react';
+import type { WeatherKind } from '../lib/weather';
 
-type Kind = 'sun' | 'partly' | 'cloud' | 'rain' | 'sun-cloud' | 'moon' | 'thunder';
-
-export function WeatherIcon({ kind, className = '', ...rest }: { kind: Kind; className?: string } & SVGProps<SVGSVGElement>) {
+export function WeatherIcon({ kind, className = '', ...rest }: { kind: WeatherKind; className?: string } & SVGProps<SVGSVGElement>) {
   const common = { fill: 'none', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, strokeWidth: 1.6 };
   switch (kind) {
     case 'sun':
@@ -70,5 +69,3 @@ export function WeatherIcon({ kind, className = '', ...rest }: { kind: Kind; cla
       );
   }
 }
-
-export type { Kind as WeatherKind };

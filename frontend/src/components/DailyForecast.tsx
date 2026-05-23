@@ -1,7 +1,7 @@
-import { WeatherIcon, type WeatherKind } from './WeatherIcon';
+import { WeatherIcon } from './WeatherIcon';
 import { Droplets } from 'lucide-react';
 import type { DailyForecastItem } from '../lib/api';
-import { formatDayLabel, toWeatherKind } from '../lib/weather';
+import { formatDayLabel, toWeatherKind, type WeatherKind } from '../lib/weather';
 
 type Day = {
   label: string;
@@ -21,7 +21,7 @@ export function DailyForecast({ entries }: DailyForecastProps) {
     const kind = toWeatherKind(entry.weather_condition);
     return {
       label: formatDayLabel(entry.date),
-      pop: entry.precipitation_probability_max_pct ?? clampWeatherPercent(entry.precipitation_total_mm),
+      pop: entry.precipitation_probability_max_pct ?? toPrecipitationPop(entry.precipitation_total_mm),
       day: kind,
       night: toNightKind(kind),
       hi: Math.round(entry.temperature_high_c),
@@ -80,6 +80,6 @@ function toNightKind(kind: WeatherKind): WeatherKind {
   return kind;
 }
 
-function clampWeatherPercent(value: number): number {
+function toPrecipitationPop(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value * 10)));
 }

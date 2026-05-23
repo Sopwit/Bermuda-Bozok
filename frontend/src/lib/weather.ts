@@ -1,4 +1,4 @@
-import type { WeatherKind } from '../components/WeatherIcon';
+export type WeatherKind = 'sun' | 'partly' | 'cloud' | 'rain' | 'sun-cloud' | 'moon' | 'thunder';
 
 export function toWeatherKind(condition: string, timeLabel?: string): WeatherKind {
   const normalized = condition.toLowerCase();

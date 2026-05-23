@@ -93,9 +93,9 @@ export function WeatherHighlights({ liveData }: WeatherHighlightsProps) {
               </div>
               <div className="flex-1 text-right">
                 <div className="font-display text-3xl leading-none text-ink">
-                  {liveData.humidity_pct}%
+                  {liveData.humidity_pct != null ? `${liveData.humidity_pct}%` : '--'}
                 </div>
-                <div className="mt-2 text-sm text-ink-muted">{describeHumidity(liveData.humidity_pct)}</div>
+                <div className="mt-2 text-sm text-ink-muted">{liveData.humidity_pct != null ? describeHumidity(liveData.humidity_pct) : 'Humidity data unavailable'}</div>
               </div>
             </div>
           </div>
