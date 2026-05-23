@@ -42,7 +42,7 @@ class TestWeatherRecommendation:
         assert payload["status"] == "success"
         assert payload["location"] == "Ankara"
         assert payload["headline"]
-        assert payload["advice"] == sample_advice
+        assert payload["ai_advice"] == sample_advice
         assert payload["reason"]
         assert payload["confidence"] in {"low", "medium", "high"}
         assert payload["ml_decision"]["umbrella_needed"] is True

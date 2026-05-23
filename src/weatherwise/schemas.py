@@ -138,7 +138,6 @@ class AdviceResponse(BaseModel):
     status: str
     location: str
     headline: str
-    advice: str
     reason: str
     confidence: Literal["low", "medium", "high"]
     live_data: LiveWeatherData
@@ -217,7 +216,6 @@ class DashboardResponse(BaseModel):
     status: str
     location: str
     headline: str
-    advice: str
     reason: str
     confidence: Literal["low", "medium", "high"]
     live_data: LiveWeatherData

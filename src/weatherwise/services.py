@@ -24,15 +24,18 @@ __all__ = [
     "build_outfit_plan",
     "build_reason",
     "dependencies_status",
+    "fetch_air_quality_data",
     "fetch_daily_forecast",
     "fetch_forecast_data",
     "fetch_weather_data",
     "find_best_time_window",
     "generate_llm_advice",
     "geocode_city",
+    "format_coordinate_location",
     "model_assets_available",
     "predict_ml_decisions",
     "search_city_suggestions",
+    "summarize_advice",
 ]
 
 logger = logging.getLogger(__name__)
@@ -60,7 +63,7 @@ def model_assets_available() -> bool:
     return all(path.exists() for path in required_files)
 
 
-def _format_coordinate_location(latitude: float | None, longitude: float | None) -> str:
+def format_coordinate_location(latitude: float | None, longitude: float | None) -> str:
     if latitude is None or longitude is None:
         return "Unknown location"
     return f"{latitude:.4f}, {longitude:.4f}"
@@ -188,8 +191,7 @@ def _get_json(url: str, *, params: dict) -> dict:
     return response.json()
 
 
-@lru_cache(maxsize=256)
-def geocode_city(city: str) -> dict:
+def _geocode_city_uncached(city: str) -> dict:
     geo_url = "https://geocoding-api.open-meteo.com/v1/search"
     geo_data = _get_json(
         geo_url,
@@ -203,6 +205,11 @@ def geocode_city(city: str) -> dict:
         )
 
     return geo_data["results"][0]
+
+
+@lru_cache(maxsize=256)
+def geocode_city(city: str) -> dict:
+    return _geocode_city_uncached(city)
 
 
 def _format_city_result(item: dict) -> dict:
@@ -570,7 +577,6 @@ def activity_recommendation(activity: str, weather_dict: dict) -> dict:
 
 
 def summarize_advice(
-    weather_dict: dict,
     clothing_text: str,
     umbrella_needed: bool,
     activity_result: dict,
@@ -866,10 +872,6 @@ def generate_llm_advice(
     settings = get_settings()
 
     fallback_msg = summarize_advice(
-        {
-            "weather_condition": weather_condition,
-            "temperature_c": temp,
-        },
         clothing_text,
         umbrella_text == "Yes",
         activity_result,

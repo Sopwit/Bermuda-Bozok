@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
       proxy: {
         '/health': 'http://127.0.0.1:8000',
-        '/locations': 'http://127.0.0.1:8000',
+        '/cities': 'http://127.0.0.1:8000',
         '/weather': 'http://127.0.0.1:8000',
         '/planning': 'http://127.0.0.1:8000',
         '/recommendations': 'http://127.0.0.1:8000',

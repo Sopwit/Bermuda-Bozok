@@ -76,7 +76,6 @@ export type DashboardResponse = {
   status: string;
   location: string;
   headline: string;
-  advice: string;
   reason: string;
   confidence: ConfidenceLevel;
   live_data: LiveWeatherData;
@@ -181,7 +180,6 @@ function parseDashboardResponse(payload: unknown): DashboardResponse {
     "status",
     "location",
     "headline",
-    "advice",
     "reason",
     "confidence",
     "live_data",
