@@ -76,10 +76,20 @@ async def close_async_client() -> None:
 
 @lru_cache(maxsize=1)
 def load_model_assets() -> dict[str, Any]:
-    model_umbrella = joblib.load(MODELS_DIR / "model_umbrella.joblib")
-    model_clothing = joblib.load(MODELS_DIR / "model_clothing.joblib")
-    label_encoder_clothing = joblib.load(MODELS_DIR / "label_encoder_clothing.joblib")
-    model_features = joblib.load(MODELS_DIR / "model_features.joblib")
+    try:
+        model_umbrella = joblib.load(MODELS_DIR / "model_umbrella.joblib")
+        model_clothing = joblib.load(MODELS_DIR / "model_clothing.joblib")
+        label_encoder_clothing = joblib.load(MODELS_DIR / "label_encoder_clothing.joblib")
+        model_features = joblib.load(MODELS_DIR / "model_features.joblib")
+    except Exception as exc:
+        logger.warning("Could not load persisted model assets (%s). Retraining on-the-fly...", exc)
+        from weatherwise.train import main as train_main
+
+        train_main()
+        model_umbrella = joblib.load(MODELS_DIR / "model_umbrella.joblib")
+        model_clothing = joblib.load(MODELS_DIR / "model_clothing.joblib")
+        label_encoder_clothing = joblib.load(MODELS_DIR / "label_encoder_clothing.joblib")
+        model_features = joblib.load(MODELS_DIR / "model_features.joblib")
 
     feature_idx = {name: i for i, name in enumerate(model_features)}
 

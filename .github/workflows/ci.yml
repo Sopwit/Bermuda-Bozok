@@ -41,17 +41,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
-      - name: Verify model assets load correctly
-        run: |
-          python -c "
-          from pathlib import Path
-          import joblib
-          models = Path('models')
-          for name in ['model_umbrella.joblib', 'model_clothing.joblib', 'label_encoder_clothing.joblib', 'model_features.joblib']:
-              obj = joblib.load(models / name)
-              print(f'OK {name} — {type(obj).__name__}')
-          print('All model assets loaded successfully.')
-          "
+      - name: Lint backend code
+        run: ruff check .
+
+      - name: Verify model assets and system health
+        run: python -m weatherwise health
 
       - name: Run tests
         run: python -m pytest -v --tb=short
