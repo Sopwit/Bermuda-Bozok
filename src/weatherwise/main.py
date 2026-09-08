@@ -91,11 +91,19 @@ app = FastAPI(
 
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
+_extra_origins: list[str] = [
+    o.strip()
+    for o in __import__("os").environ.get("ALLOWED_ORIGINS", "").split(",")
+    if o.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "https://bermuda-bozok.vercel.app",
+        *_extra_origins,
     ],
     allow_credentials=True,
     allow_methods=["*"],

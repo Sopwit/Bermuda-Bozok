@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: bermuda-bozok-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -e .
+    startCommand: uvicorn weatherwise.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: ALLOWED_ORIGINS
+        value: "https://bermuda-bozok.vercel.app"
