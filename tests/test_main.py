@@ -137,3 +137,130 @@ class TestDashboard:
         assert payload["headline"]
         assert len(payload["activity_windows"]) == 3
         assert len(payload["daily_forecast"]) == 1
+
+    def test_dashboard_uses_cache(
+        self, client, monkeypatch, sample_weather,
+        sample_forecast, sample_daily_forecast, sample_ml_result_no_umbrella,
+    ):
+        call_count = {"count": 0}
+
+        def fake_fetch_weather(*args, **kwargs):
+            call_count["count"] += 1
+            return sample_weather
+
+        main.api_cache.clear()
+        monkeypatch.setattr(main, "fetch_weather_data", fake_fetch_weather)
+        monkeypatch.setattr(main, "fetch_forecast_data", lambda *a, **k: sample_forecast)
+        monkeypatch.setattr(main, "fetch_daily_forecast", lambda *a, **k: sample_daily_forecast)
+        monkeypatch.setattr(main, "predict_ml_decisions", lambda *a, **k: sample_ml_result_no_umbrella)
+        monkeypatch.setattr(main, "generate_llm_advice", lambda **k: "Nice weather.")
+
+        body = {"city": "Izmir", "activity": "walking", "language": "en"}
+        resp1 = client.post("/weather/dashboard", json=body)
+        assert resp1.status_code == 200
+        assert call_count["count"] == 1
+
+        # Second identical request must hit cache
+        resp2 = client.post("/weather/dashboard", json=body)
+        assert resp2.status_code == 200
+        assert call_count["count"] == 1
+
+
+class TestCitySearch:
+    def test_city_search_success(self, client, monkeypatch):
+        fake_results = [
+            {
+                "name": "Ankara",
+                "country": "Turkey",
+                "admin1": "Ankara",
+                "admin2": None,
+                "latitude": 39.92,
+                "longitude": 32.85,
+                "display_name": "Ankara, Turkey",
+            }
+        ]
+        async def fake_search(q, limit=8):
+            return fake_results
+
+        monkeypatch.setattr(main, "search_city_suggestions_async", fake_search)
+        response = client.get("/cities/search?q=Ankara")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "success"
+        assert len(data["results"]) == 1
+        assert data["results"][0]["name"] == "Ankara"
+
+    def test_city_search_short_query_validation_error(self, client):
+        response = client.get("/cities/search?q=a")
+        assert response.status_code == 422
+        assert response.json()["error_code"] == "VALIDATION_ERROR"
+
+
+class TestValidationAndErrorHandling:
+    def test_missing_both_city_and_coordinates(self, client):
+        response = client.post("/weather/dashboard", json={"language": "en"})
+        assert response.status_code == 422
+        assert response.json()["error_code"] == "VALIDATION_ERROR"
+
+    def test_mismatched_coordinates(self, client):
+        response = client.post("/weather/dashboard", json={"latitude": 39.92})
+        assert response.status_code == 422
+        assert response.json()["error_code"] == "VALIDATION_ERROR"
+
+    def test_empty_city_with_valid_coordinates_passes(
+        self, client, monkeypatch, sample_weather,
+        sample_forecast, sample_daily_forecast, sample_ml_result,
+    ):
+        main.api_cache.clear()
+        monkeypatch.setattr(main, "fetch_weather_data", lambda *a, **k: sample_weather)
+        monkeypatch.setattr(main, "fetch_forecast_data", lambda *a, **k: sample_forecast)
+        monkeypatch.setattr(main, "fetch_daily_forecast", lambda *a, **k: sample_daily_forecast)
+        monkeypatch.setattr(main, "predict_ml_decisions", lambda *a, **k: sample_ml_result)
+        monkeypatch.setattr(main, "generate_llm_advice", lambda **k: "Advice.")
+
+        response = client.post(
+            "/weather/dashboard",
+            json={"city": "  ", "latitude": 39.92, "longitude": 32.85},
+        )
+        assert response.status_code == 200
+
+
+class TestBusinessLogicAndOptimization:
+    def test_predict_ml_decisions_speed_and_accuracy(self, sample_weather):
+        from weatherwise.services import predict_ml_decisions
+        needed, text, cloth = predict_ml_decisions(sample_weather)
+        assert isinstance(needed, bool)
+        assert text in {"Yes", "No"}
+        assert isinstance(cloth, str) and len(cloth) > 0
+
+    def test_wmo_code_mapping(self):
+        from weatherwise.services import map_wmo_code
+        assert map_wmo_code(0) == "clear"
+        assert map_wmo_code(1) == "clouds"
+        assert map_wmo_code(61) == "rain"
+        assert map_wmo_code(71) == "snow"
+        assert map_wmo_code(95) == "thunderstorm"
+
+    def test_season_mapping(self):
+        from weatherwise.services import get_season
+        assert get_season(1) == "winter"
+        assert get_season(4) == "spring"
+        assert get_season(7) == "summer"
+        assert get_season(10) == "autumn"
+
+    def test_activity_recommendations(self, sample_weather):
+        from weatherwise.services import activity_recommendation
+        res_walk = activity_recommendation("walking", sample_weather)
+        res_cycle = activity_recommendation("cycling", sample_weather)
+        res_dine = activity_recommendation("outdoor_dining", sample_weather)
+        assert res_walk["recommendation"] in {"recommended", "acceptable", "not_recommended"}
+        assert res_cycle["recommendation"] in {"recommended", "acceptable", "not_recommended"}
+        assert res_dine["recommendation"] in {"recommended", "acceptable", "not_recommended"}
+
+    def test_headline_generation(self, sample_weather):
+        from weatherwise.services import build_headline
+        headline_en = build_headline(sample_weather, "light_jacket", False, "en")
+        headline_tr = build_headline(sample_weather, "light_jacket", False, "tr")
+        assert "light jacket" in headline_en
+        assert "light jacket" in headline_tr
+
