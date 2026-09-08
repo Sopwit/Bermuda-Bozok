@@ -43,8 +43,8 @@ class TestCLI:
         code = main(["query", "Ankara", "--activity", "walking"])
         assert code == 0
         captured = capsys.readouterr()
-        assert "WeatherWise CLI — Ankara" in captured.out
-        assert "Live Temp" in captured.out
+        assert "WeatherWise CLI -- Ankara" in captured.out
+        assert "Temp:" in captured.out
 
     def test_cli_query_json_output(self, monkeypatch, capsys, sample_weather, sample_ml_result):
         def fake_fetch(*args, **kwargs):
