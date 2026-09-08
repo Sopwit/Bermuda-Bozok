@@ -44,6 +44,9 @@ Homepage = "https://github.com/Bermuda-Bozok/WeatherWise"
 Source = "https://github.com/Bermuda-Bozok/WeatherWise"
 Tracker = "https://github.com/Bermuda-Bozok/WeatherWise/issues"
 
+[project.scripts]
+weatherwise = "weatherwise.cli:main"
+
 [project.optional-dependencies]
 dev = [
     "pytest~=8.3",

@@ -4,11 +4,12 @@
   "scripts": {
     "dev": "npm --prefix frontend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
-    "dev:backend": "uvicorn weatherwise.main:app --reload --port 8000",
+    "dev:backend": "bash -c 'if [ -f .venv/bin/uvicorn ]; then .venv/bin/uvicorn weatherwise.main:app --reload --port 8000; else uvicorn weatherwise.main:app --reload --port 8000; fi'",
     "build": "npm --prefix frontend run build",
     "lint:frontend": "npm --prefix frontend run lint",
-    "lint:backend": "ruff check .",
-    "test:backend": "pytest",
-    "test": "pytest"
+    "lint:backend": "bash -c 'if [ -f .venv/bin/ruff ]; then .venv/bin/ruff check .; else ruff check .; fi'",
+    "test:backend": "bash -c 'if [ -f .venv/bin/pytest ]; then .venv/bin/pytest; else pytest; fi'",
+    "test": "bash -c 'if [ -f .venv/bin/pytest ]; then .venv/bin/pytest; else pytest; fi'",
+    "cli": "bash -c 'if [ -f .venv/bin/weatherwise ]; then .venv/bin/weatherwise \"$@\"; else python3 -m weatherwise \"$@\"; fi' --"
   }
 }
