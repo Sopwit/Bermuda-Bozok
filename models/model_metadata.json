@@ -1,12 +1,12 @@
 {
-  "generated_at_utc": "2026-04-19T11:06:48.650547+00:00",
-  "python_version": "3.12.13",
+  "generated_at_utc": "2026-09-08T02:29:19.411996+00:00",
+  "python_version": "3.14.7",
   "package_versions": {
-    "joblib": "1.5.0",
-    "numpy": "2.4.4",
-    "pandas": "2.2.3",
-    "scikit-learn": "1.6.1",
-    "xgboost": "3.0.0"
+    "joblib": "1.6.0",
+    "numpy": "2.5.3",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.9.0",
+    "xgboost": "3.4.1"
   },
   "artifacts": [
     "model_umbrella.joblib",

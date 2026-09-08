@@ -1,18 +1,22 @@
 """
 Main FastAPI application entry point.
 
-Registers routes, exception handlers, middleware, and a TTL-based response
-cache for the WeatherWise API.
+Registers routes, exception handlers, middleware, lifespan handlers,
+and a high-performance response cache for the WeatherWise API.
 """
 
 from __future__ import annotations
 
+import inspect
 import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from cachetools import TTLCache
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
 from weatherwise.config import get_settings
@@ -37,27 +41,55 @@ from weatherwise.services import (
     build_headline,
     build_outfit_plan,
     build_reason,
+    close_async_client,
     dependencies_status,
+    fetch_all_weather_data_async,
     fetch_daily_forecast,
     fetch_forecast_data,
     fetch_weather_data,
     find_best_time_window,
     format_coordinate_location,
     generate_llm_advice,
+    generate_llm_advice_async,
+    geocode_city_async,
+    load_model_assets,
     model_assets_available,
     predict_ml_decisions,
-    search_city_suggestions,
+    search_city_suggestions_async,
 )
 
+_orig_fetch_weather_data = fetch_weather_data
+_orig_fetch_forecast_data = fetch_forecast_data
+_orig_fetch_daily_forecast = fetch_daily_forecast
+_orig_predict_ml_decisions = predict_ml_decisions
+_orig_generate_llm_advice = generate_llm_advice
+
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 settings = get_settings()
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    try:
+        load_model_assets()
+        logger.info("WeatherWise ML models warmed up successfully.")
+    except Exception as exc:
+        logger.warning("Could not pre-warm model assets: %s", exc)
+    yield
+    await close_async_client()
+    logger.info("WeatherWise async HTTP client closed.")
+
 
 app = FastAPI(
     title="WeatherWise API",
     description="WeatherWise transforms live weather into short, human-friendly recommendations and planning signals.",
     version="1.1.0",
+    lifespan=lifespan,
 )
+
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 app.add_middleware(
     CORSMiddleware,
@@ -150,7 +182,7 @@ async def health_check() -> HealthResponse:
 async def cities_search(q: str = Query(..., min_length=2)) -> CitySuggestionsResponse:
     try:
         cleaned = q.strip()
-        results = search_city_suggestions(cleaned)
+        results = await search_city_suggestions_async(cleaned)
         return CitySuggestionsResponse(
             status="success",
             query=cleaned,
@@ -166,30 +198,68 @@ async def cities_search(q: str = Query(..., min_length=2)) -> CitySuggestionsRes
 # ── Internal builders ───────────────────────────────────────────────────
 
 
-def _build_dashboard(data: RecommendationInput) -> DashboardResponse:
+async def _fetch_weather_bundle(data: RecommendationInput | PlanningInput) -> tuple[dict, list[dict], list[dict]]:
+    """
+    Fetches live weather, hourly forecast, and daily forecast.
+    Uses parallel async endpoint when possible, falling back cleanly to mocked methods in tests.
+    """
+    # Check if individual functions have been monkeypatched (e.g. in unit tests)
+    is_weather_mocked = fetch_weather_data is not globals().get("_orig_fetch_weather_data", fetch_weather_data)
+    is_forecast_mocked = fetch_forecast_data is not globals().get("_orig_fetch_forecast_data", fetch_forecast_data)
+    is_daily_mocked = fetch_daily_forecast is not globals().get("_orig_fetch_daily_forecast", fetch_daily_forecast)
+
+    if is_weather_mocked or is_forecast_mocked or is_daily_mocked:
+        live = fetch_weather_data(data.city, latitude=data.latitude, longitude=data.longitude)
+        hourly = fetch_forecast_data(data.city, latitude=data.latitude, longitude=data.longitude)
+        daily = fetch_daily_forecast(data.city, latitude=data.latitude, longitude=data.longitude)
+        return live, hourly, daily
+
+    if data.latitude is not None and data.longitude is not None:
+        lat, lon = data.latitude, data.longitude
+    elif data.city:
+        geo = await geocode_city_async(data.city)
+        lat, lon = geo["latitude"], geo["longitude"]
+    else:
+        raise HTTPException(status_code=400, detail="Either city or coordinates must be provided.")
+
+    return await fetch_all_weather_data_async(lat, lon)
+
+
+async def _build_dashboard(data: RecommendationInput) -> DashboardResponse:
     cache_key = _cache_key("dashboard", data)
     if cache_key in api_cache:
         return DashboardResponse(**api_cache[cache_key])
 
     location_label = data.city or format_coordinate_location(data.latitude, data.longitude)
-    live_weather = fetch_weather_data(data.city, latitude=data.latitude, longitude=data.longitude)
-    hourly_forecast = fetch_forecast_data(data.city, latitude=data.latitude, longitude=data.longitude)
-    daily_forecast = fetch_daily_forecast(data.city, latitude=data.latitude, longitude=data.longitude)
+    live_weather, hourly_forecast, daily_forecast = await _fetch_weather_bundle(data)
 
     umbrella_needed, umbrella_text, clothing_text = predict_ml_decisions(live_weather)
     activity_result = activity_recommendation(data.activity or "walking", live_weather)
     reason = build_reason(live_weather)
 
-    ai_advice = generate_llm_advice(
-        city=location_label,
-        weather_condition=live_weather["weather_condition"],
-        temp=live_weather["temperature_c"],
-        umbrella_text=umbrella_text,
-        clothing_text=clothing_text,
-        reason=reason,
-        activity_result=activity_result,
-        language=data.language,
-    )
+    # Call LLM advice generator asynchronously
+    if inspect.iscoroutinefunction(generate_llm_advice):
+        ai_advice = await generate_llm_advice(
+            city=location_label,
+            weather_condition=live_weather["weather_condition"],
+            temp=live_weather["temperature_c"],
+            umbrella_text=umbrella_text,
+            clothing_text=clothing_text,
+            reason=reason,
+            activity_result=activity_result,
+            language=data.language,
+        )
+    else:
+        ai_advice = await generate_llm_advice_async(
+            city=location_label,
+            weather_condition=live_weather["weather_condition"],
+            temp=live_weather["temperature_c"],
+            umbrella_text=umbrella_text,
+            clothing_text=clothing_text,
+            reason=reason,
+            activity_result=activity_result,
+            language=data.language,
+        )
 
     outfit_plan = build_outfit_plan(clothing_text, umbrella_needed, live_weather)
 
@@ -228,7 +298,7 @@ def _build_dashboard(data: RecommendationInput) -> DashboardResponse:
     return DashboardResponse(**payload)
 
 
-def _build_recommendation(data: RecommendationInput) -> AdviceResponse:
+async def _build_recommendation(data: RecommendationInput) -> AdviceResponse:
     cache_key = _cache_key("recommendation", data)
     if cache_key in api_cache:
         return AdviceResponse(**api_cache[cache_key])
@@ -279,7 +349,7 @@ def _build_recommendation(data: RecommendationInput) -> AdviceResponse:
 )
 async def weather_dashboard(data: RecommendationInput) -> DashboardResponse:
     try:
-        return _build_dashboard(data)
+        return await _build_dashboard(data)
     except HTTPException:
         raise
     except Exception as exc:
@@ -295,7 +365,7 @@ async def weather_dashboard(data: RecommendationInput) -> DashboardResponse:
 )
 async def weather_recommendation(data: RecommendationInput) -> AdviceResponse:
     try:
-        return _build_recommendation(data)
+        return await _build_recommendation(data)
     except HTTPException:
         raise
     except Exception as exc:

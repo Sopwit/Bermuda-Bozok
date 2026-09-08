@@ -43,8 +43,10 @@ class CityInput(BaseModel):
     @classmethod
     def validate_city(cls, value: str | None) -> str | None:
         if value is None:
-            return value
+            return None
         cleaned = value.strip()
+        if not cleaned:
+            return None
         if len(cleaned) < 2:
             raise ValueError("City name must contain at least 2 characters.")
         return cleaned
@@ -60,11 +62,6 @@ class CityInput(BaseModel):
 
         if not has_city and not (has_latitude and has_longitude):
             raise ValueError("Either city or latitude/longitude must be provided.")
-
-        if self.city is not None:
-            self.city = self.city.strip() or None
-            if self.city is not None and len(self.city) < 2:
-                raise ValueError("City name must contain at least 2 characters.")
 
         return self
 

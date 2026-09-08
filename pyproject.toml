@@ -28,6 +28,7 @@ requires-python = ">=3.11,<3.15"
 dependencies = [
     "cachetools~=5.5",
     "fastapi~=0.115",
+    "httpx~=0.28",
     "joblib~=1.4",
     "pandas~=2.2",
     "pydantic~=2.10",
